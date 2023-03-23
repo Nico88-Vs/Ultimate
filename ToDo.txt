@@ -1,0 +1,6 @@
+ 
+ 
+ !! Il periodo indicatore e grafico potrebbero non coincidere
+ !! Potrei usare I.hd e verificare in strategy che l'archivio sia sufficente
+ !! Tento di inizializzare l'indicatore nel costruttore della serie
+ !! Logica di gap in Update Series
