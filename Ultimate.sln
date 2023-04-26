@@ -11,6 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TheIndicator", "TheIndicato
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Elementi di soluzione", "Elementi di soluzione", "{278C6564-B252-4807-B9FE-DCE769220ACA}"
 	ProjectSection(SolutionItems) = preProject
+		Next_Step_Fork.txt = Next_Step_Fork.txt
 		ToDo.txt = ToDo.txt
 	EndProjectSection
 EndProject

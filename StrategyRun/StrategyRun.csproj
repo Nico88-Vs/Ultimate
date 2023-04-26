@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Platforms>AnyCPU</Platforms>
@@ -9,19 +9,38 @@
     <AssemblyName>StrategyRun</AssemblyName>
     <RootNamespace>StrategyRun</RootNamespace>
     <StartAction>Program</StartAction>
-    <StartProgram>A:\Quantower\TradingPlatform\v1.128.20\Console.StarterNew.exe</StartProgram>
-    <StartArguments>--address 127.0.0.1 --port 57217</StartArguments>
+    <StartProgram>A:\Quantower\TradingPlatform\v1.130.11\Console.StarterNew.exe</StartProgram>
+    <StartArguments>--address 127.0.0.1 --port 49165</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <OutputPath>A:\Quantower\TradingPlatform\v1.128.20\..\..\Settings\Scripts\Strategies\StrategyRun</OutputPath>
+    <OutputPath>A:\Quantower\TradingPlatform\v1.130.11\..\..\Settings\Scripts\Strategies\StrategyRun</OutputPath>
+    <Optimize>True</Optimize>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>A:\Quantower\TradingPlatform\v1.128.20\..\..\Settings\Scripts\Strategies\StrategyRun</OutputPath>
+    <OutputPath>A:\Quantower\TradingPlatform\v1.130.11\..\..\Settings\Scripts\Strategies\StrategyRun</OutputPath>
+    <Optimize>False</Optimize>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\PlaceOrder\PlaceOrder.csproj" />
+    <ProjectReference Include="..\TheIndicator\TheIndicator.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="TradingPlatform.BusinessLayer">
-      <HintPath>A:\Quantower\TradingPlatform\v1.128.20\bin\TradingPlatform.BusinessLayer.dll</HintPath>
+      <HintPath>A:\Quantower\TradingPlatform\v1.130.11\bin\TradingPlatform.BusinessLayer.dll</HintPath>
       <Private>False</Private>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>

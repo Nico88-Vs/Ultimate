@@ -7,14 +7,13 @@ using System.Threading.Tasks;
 namespace TheIndicator.Enum
 {
     [Serializable]
-    public enum EventCrosArg
+    public enum TypeOfValue
     {
-        Gold_fast,
-        Dead_fast,
-        Gold_midt,
-        Dead_mid,
-        Gold_slow,
-        Dead_slow,
-        Unkown
+        lenght,
+        buffer,
+        buffer_plus_lenght,
+        minFast,
+        id,
+        color
     }
 }

@@ -1,6 +1,15 @@
  
  
- !! Il periodo indicatore e grafico potrebbero non coincidere
- !! Potrei usare I.hd e verificare in strategy che l'archivio sia sufficente
- !! Tento di inizializzare l'indicatore nel costruttore della serie
- !! Logica di gap in Update Series
+______ !! Logica di gap in Update Series >>>>>> IN Cloud
+!! IchiMT sull update resta indietro di uno
+!! Verifivcare Min_Max / GAps / Bases
+!! Display gaps and bases and min_max
+?? un interfaccia per spostare serie
+?? un interfaccia per spostare metodi di calcolo
+?? ottenere dati di relazione fra le nuvole
+!! Il momento e sbagliato
+!! finire il Dysplay Ogetti => Toglierli da Interfaccia
+!! sistemare il gap displayer
+!! ho aggiunto i filtri sui gap! in shape 
+!! VERIFICARE IL FILTRO GAP	
+!! GAP_CrosStrategy si ferma se la verde ha buffer maggiore di gap

@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Platforms>AnyCPU</Platforms>
@@ -10,14 +10,17 @@
     <RootNamespace>PlaceOrder</RootNamespace>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>A:\Quantower\TradingPlatform\v1.128.20\..\..\Settings\Scripts\PlaceOrderStrategies\PlaceOrder</OutputPath>
+    <OutputPath>A:\Quantower\TradingPlatform\v1.130.11\..\..\Settings\Scripts\PlaceOrderStrategies\PlaceOrder</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <OutputPath>A:\Quantower\TradingPlatform\v1.128.20\..\..\Settings\Scripts\PlaceOrderStrategies\PlaceOrder</OutputPath>
+    <OutputPath>A:\Quantower\TradingPlatform\v1.130.11\..\..\Settings\Scripts\PlaceOrderStrategies\PlaceOrder</OutputPath>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\TheIndicator\TheIndicator.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="TradingPlatform.BusinessLayer">
-      <HintPath>A:\Quantower\TradingPlatform\v1.128.20\bin\TradingPlatform.BusinessLayer.dll</HintPath>
+      <HintPath>A:\Quantower\TradingPlatform\v1.130.11\bin\TradingPlatform.BusinessLayer.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>

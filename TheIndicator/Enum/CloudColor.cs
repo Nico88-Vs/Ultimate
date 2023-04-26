@@ -7,14 +7,10 @@ using System.Threading.Tasks;
 namespace TheIndicator.Enum
 {
     [Serializable]
-    public enum EventCrosArg
+    public enum CloudColor
     {
-        Gold_fast,
-        Dead_fast,
-        Gold_midt,
-        Dead_mid,
-        Gold_slow,
-        Dead_slow,
-        Unkown
+        green = 1,
+        red = -1,
+        white = 0
     }
 }

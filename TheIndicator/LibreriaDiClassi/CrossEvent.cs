@@ -7,6 +7,7 @@ using TheIndicator.Enum;
 
 namespace TheIndicator.LibreriaDiClassi
 {
+    [Serializable]
     public class CrossEvent : EventArgs
     {
         public EventCrosArg Args { get; set; }

@@ -5,10 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using TradingPlatform.BusinessLayer;
 
-
 namespace TheIndicator.LibreriaDiClassi
 {
-    public struct TF
+    [Serializable]
+    public class TF
     {
         public int Delay { get; set; }
         public TimeFrame Timeframe { get; set; }
@@ -16,17 +16,34 @@ namespace TheIndicator.LibreriaDiClassi
         public int FastSeries { get; private set; }
         public int SlowSeries { get; private set; }
 
-        public TF(TimeFrame timeframe, int delay)
+        public TF()
+        {
+
+        }
+
+        public TF(TimeFrame timeframe, int delay, Indicator indi, int fast, int slow)
         {
             Delay = delay;
             Timeframe = timeframe;
+            this.Indicatore = indi;
+            this.FastSeries = fast;
+            this.SlowSeries = slow;
         }
         public enum TimeFrame
         {
             Fast,
             Mid,
-            slow,
+            Slow,
+        }
+
+        public int GetCorrectBuffer(int tenkanperiod, int buffer)
+        {
+            return buffer + (tenkanperiod * Delay);
+        }
+
+        public int GetCorrectBuffer(int tenkanperiod)
+        {
+            return tenkanperiod * Delay;
         }
     }
-
 }
