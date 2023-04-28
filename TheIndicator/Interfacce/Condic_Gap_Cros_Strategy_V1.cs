@@ -16,7 +16,6 @@ namespace StrategyRun
     /// </summary>
     public class Condic_Gap_Cros_Strategy_V1 : GetCondiction
     {
-        public enum Sentiment { Buy, Sell, Wait}
         public bool useAlgoSentiment { get; set; }
         public Sentiment sentimentInput { get; set; } 
         public bool gapFilter { get; set; }
@@ -27,7 +26,7 @@ namespace StrategyRun
         public override string Name { get; } = "Gap-Cross V1";
         public override string Description { get; } = "Trading Strategy based on Mid-gap and fast cross";
         public override int Buffer { get; } = 0;
-        public Sentiment sentiment { get; set; }
+        public override Sentiment Sentiment { get; set; }
         public TF.TimeFrame currentTF { get; }
 
 
@@ -63,7 +62,7 @@ namespace StrategyRun
         {
             SetSentiment();
 
-            if(this.sentiment == Sentiment.Wait)
+            if(this.Sentiment == Sentiment.Wait)
                 return;
 
             if(currentTF != TF.TimeFrame.Mid && currentTF != TF.TimeFrame.Slow)
@@ -119,7 +118,7 @@ namespace StrategyRun
                     if (position + c.Length > v.Buffer + midtfperio)
                     {
                         Cloud selected = currentTF == TF.TimeFrame.Mid ? Series.Clouds.Last(c => c.Buffer <= delayBuffer) : Series.CloudsMid.Last(c => c.Buffer <= delayBuffer);
-                        CloudColor cloudSelectedColor = this.sentiment == Sentiment.Buy ? CloudColor.red : CloudColor.green;
+                        CloudColor cloudSelectedColor = this.Sentiment == Sentiment.Buy ? CloudColor.red : CloudColor.green;
 
                         if (selected.Color != cloudSelectedColor)
                             currentGap = null;
@@ -145,8 +144,8 @@ namespace StrategyRun
                 
 
             Cloud x = currentTF == TF.TimeFrame.Mid ? Series.CurrentCloud : Series.CurrentMidCloud;
-            CloudColor cloudSelectedColor = this.sentiment == Sentiment.Buy ? CloudColor.green : CloudColor.red;
-            CloudColor tradeCloudColor = this.sentiment == Sentiment.Buy ? CloudColor.red : CloudColor.green;
+            CloudColor cloudSelectedColor = this.Sentiment == Sentiment.Buy ? CloudColor.green : CloudColor.red;
+            CloudColor tradeCloudColor = this.Sentiment == Sentiment.Buy ? CloudColor.red : CloudColor.green;
 
             if (x.Thickness > x.AverageList.Last() && x.Color == cloudSelectedColor)
             {
@@ -158,13 +157,13 @@ namespace StrategyRun
                     switch (w.RoofList.Any())
                     {
                         case true:
-                            Bases b = this.sentiment == Sentiment.Buy ?  w.RoofList.OrderBy(x => x.Value).First() : w.RoofList.OrderBy(x => x.Value).Last();
+                            Bases b = this.Sentiment == Sentiment.Buy ?  w.RoofList.OrderBy(x => x.Value).First() : w.RoofList.OrderBy(x => x.Value).Last();
                             min = b.Value;
                             //Log("Conta Anche Le Basi Da 2", LoggingLevel.Error);
                             break;
 
                         case false:
-                            min = this.sentiment == Sentiment.Buy ? w.MinimaFast.Last().Value : w.MaximaFast.Last().Value;
+                            min = this.Sentiment == Sentiment.Buy ? w.MinimaFast.Last().Value : w.MaximaFast.Last().Value;
                             break;
                     }
 
@@ -172,7 +171,7 @@ namespace StrategyRun
                     switch (x.MinimaSlow.Any())
                     {
                         case true:
-                            val = this.sentiment == Sentiment.Buy ? x.MinimaSlow.Last().Value : x.MaximaSlow.Last().Value;
+                            val = this.Sentiment == Sentiment.Buy ? x.MinimaSlow.Last().Value : x.MaximaSlow.Last().Value;
                             break;
 
                         case false:
@@ -182,7 +181,7 @@ namespace StrategyRun
 
                     //Log("Last Condiction Cek", LoggingLevel.Error);
 
-                    switch (this.sentiment)
+                    switch (this.Sentiment)
                     {
                         case Sentiment.Buy:
                             if (val > min)
@@ -266,9 +265,9 @@ namespace StrategyRun
                         return;
                     if (c.Color == CloudColor.white)
                         return;
-                    if (c.Color == CloudColor.red & sentiment == Sentiment.Sell)
+                    if (c.Color == CloudColor.red & Sentiment == Sentiment.Sell)
                         return;
-                    if (c.Color == CloudColor.green & sentiment == Sentiment.Buy)
+                    if (c.Color == CloudColor.green & Sentiment == Sentiment.Buy)
                         return;
                     if (gapFilter && e.Gap.GapReason == Gaps.Reason.bases)
                         return;
@@ -283,9 +282,9 @@ namespace StrategyRun
                         return;
                     if (c.Color == CloudColor.white)
                         return;
-                    if (c.Color == CloudColor.red & sentiment == Sentiment.Sell)
+                    if (c.Color == CloudColor.red & Sentiment == Sentiment.Sell)
                         return;
-                    if (c.Color == CloudColor.green & sentiment == Sentiment.Buy)
+                    if (c.Color == CloudColor.green & Sentiment == Sentiment.Buy)
                         return;
                     if (gapFilter && e.Gap.GapReason == Gaps.Reason.bases)
                         return;
@@ -302,35 +301,35 @@ namespace StrategyRun
         private void SetSentiment()
         {
             if (!useAlgoSentiment)
-                this.sentiment = sentimentInput;
+                this.Sentiment = sentimentInput;
 
             else if (useAlgoSentiment)
             {
                 switch (Series.Scenario)
                 {
                     case IchimokuCloudScenario.STRONG_BULLISH:
-                        this.sentiment = Sentiment.Sell;
+                        this.Sentiment = Sentiment.Sell;
                         break;
                     case IchimokuCloudScenario.STRONG_BEARISH:
-                        this.sentiment = Sentiment.Buy;
+                        this.Sentiment = Sentiment.Buy;
                         break;
                     case IchimokuCloudScenario.MODERATELY_BULLISH:
-                        this.sentiment = Sentiment.Buy;
+                        this.Sentiment = Sentiment.Buy;
                         break;
                     case IchimokuCloudScenario.MODERATELY_BEARISH:
-                        this.sentiment = Sentiment.Sell;
+                        this.Sentiment = Sentiment.Sell;
                         break;
                     case IchimokuCloudScenario.CONSOLIDATION_BULLISH:
-                        this.sentiment = Sentiment.Sell;
+                        this.Sentiment = Sentiment.Sell;
                         break;
                     case IchimokuCloudScenario.CONSOLIDATION_BEARISH:
-                        this.sentiment = Sentiment.Buy;
+                        this.Sentiment = Sentiment.Buy;
                         break;
                     case IchimokuCloudScenario.UNDEFINED:
-                        this.sentiment = Sentiment.Wait;
+                        this.Sentiment = Sentiment.Wait;
                         break;
                     default:
-                        this.sentiment = Sentiment.Wait;
+                        this.Sentiment = Sentiment.Wait;
                         break;
                 }
             }

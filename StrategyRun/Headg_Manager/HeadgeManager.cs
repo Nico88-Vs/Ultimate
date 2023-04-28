@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using TheIndicator.LibreriaDiClassi;
 using TradingPlatform.BusinessLayer;
 using TheIndicator.Enum;
+using TheIndicator.Interfacce;
 
 namespace StrategyRun.Headg_Manager
 {
@@ -20,12 +21,18 @@ namespace StrategyRun.Headg_Manager
         private Symbol symbol;
         private Status status;
         private CloudSeries Series;
+        private GetCondiction condiction;
+        private Type conType;
 
-        public HeadgeManager(CloudSeries serie, Account account, Symbol symbol)
+        public HeadgeManager(CloudSeries serie, Account account, Symbol symbol, GetCondiction cond)
         {
+            this.condiction = cond;
+            this.conType = cond.GetType();
             this.Series = serie;
             this.account = account;
             this.symbol = symbol;
+            this.MainTrades = new MainTrades(0, cond.Sentiment);
+            this.Covers = new Covers(this.MainTrades);
         }
 
         private void DeterminaStatus()

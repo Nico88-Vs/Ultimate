@@ -7,7 +7,7 @@ using TheIndicator.Enum;
 
 namespace StrategyRun.Headg_Manager
 {
-    public struct MainTrades
+    public class MainTrades
     {
         public List<Position> Positions { get; set; }
         public List<Order> Orders { get; set; }
@@ -16,12 +16,10 @@ namespace StrategyRun.Headg_Manager
         public Sentiment Sentiment { get; set; }
         public event EventHandler<SwitchSentiment> SentimentChanged;
 
-        private Sentiment currentSent;
-        private CloudSeries CloudSeries;
+        private Sentiment currentSent = Sentiment.Wait;
 
-        public MainTrades(CloudSeries cloudSeries, int id, Sentiment current)
+        public MainTrades(int id, Sentiment current)
         {
-            CloudSeries = cloudSeries;
             this.ID = id;
             Positions = new List<Position>();
             Orders = new List<Order>();
@@ -29,8 +27,15 @@ namespace StrategyRun.Headg_Manager
 
             if(currentSent != this.Sentiment)
             {
-
+                SwitchSentiment arg = new SwitchSentiment(currentSent, this.Sentiment);
+                this.OnSentimentChanged(arg);
             }
+        }
+
+        public virtual void OnSentimentChanged(SwitchSentiment e)
+        {
+            SentimentChanged?.Invoke(this, e);
+            this.currentSent = e.NewSentiment;
         }
     }
 }

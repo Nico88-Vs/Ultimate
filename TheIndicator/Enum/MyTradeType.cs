@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 
 namespace TheIndicator.Enum
 {
-    internal class MyTradeType
+    public enum MyTradeType
     {
+        Main,
+        Cover
     }
 }

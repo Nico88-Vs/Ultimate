@@ -6,7 +6,20 @@ using System.Threading.Tasks;
 
 namespace TheIndicator.Enum
 {
-    internal class Sentiment
+    public enum Sentiment
     {
+        Buy, Sell, Wait
+    }
+
+    public class SwitchSentiment : EventArgs
+    {
+        public Sentiment NewSentiment { get; set; }
+        public Sentiment OldSentimennt { get; set; }
+
+        public SwitchSentiment(Sentiment oldSentiment, Sentiment newSentiment)
+        {
+            this.OldSentimennt = oldSentiment;
+            this.NewSentiment = newSentiment;
+        }
     }
 }
