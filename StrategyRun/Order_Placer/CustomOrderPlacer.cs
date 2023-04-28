@@ -1,4 +1,5 @@
-﻿using System;
+﻿using StrategyRun.Headg_Manager;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -8,7 +9,7 @@ using TheIndicator.Enum;
 using TheIndicator.LibreriaDiClassi;
 using TradingPlatform.BusinessLayer;
 
-namespace PlaceOrder
+namespace StrategyRun.Order_Placer
 {
     public class CustomOrderPlacer
     {
@@ -17,7 +18,7 @@ namespace PlaceOrder
         List<Order> ActiveOrderders { get; set; }
         public string Status { get; private set; } = "Initializing";
 
-        private string Name  = "First Custom Order Placer";
+        private string Name = "First Custom Order Placer";
         private List<Order> openedOrders;
         private bool closed = false;
         private double mainTradesAmmount;
@@ -29,29 +30,29 @@ namespace PlaceOrder
         private double min_Risk;
         private int numberOfCloses;
 
-        public CustomOrderPlacer(Symbol sy, Account ac, double totalExposion, double exposionCoverRapport = 0.5, double min_Risk= 0.5, int numberOfCloses = 3)
+        public CustomOrderPlacer(Symbol sy, Account ac, double totalExposion, double exposionCoverRapport = 0.5, double min_Risk = 0.5, int numberOfCloses = 3)
         {
-            this.symbol = sy;
-            this.account = ac;
-            this.mainTradesAmmount = totalExposion * (1 - exposionCoverRapport);
-            this.coverTradesAmmount = exposionCoverRapport * totalExposion;
-            this.Trades = new List<Trade>();
-            this.ActivePositions = new List<Position>();
-            this.ActiveOrderders = new List<Order>();
-            this.openedOrders = new List<Order>();
+            symbol = sy;
+            account = ac;
+            mainTradesAmmount = totalExposion * (1 - exposionCoverRapport);
+            coverTradesAmmount = exposionCoverRapport * totalExposion;
+            Trades = new List<Trade>();
+            ActivePositions = new List<Position>();
+            ActiveOrderders = new List<Order>();
+            openedOrders = new List<Order>();
             this.min_Risk = min_Risk;
             this.numberOfCloses = numberOfCloses;
 
-            Core.Instance.OrderAdded += this.Instance_OrderAdded;
-            Core.Instance.PositionAdded += this.Instance_PositionAdded;
-            Core.Instance.TradeAdded += this.Instance_TradeAdded;
-            Core.Instance.PositionRemoved += this.Instance_PositionRemoved;
+            Core.Instance.OrderAdded += Instance_OrderAdded;
+            Core.Instance.PositionAdded += Instance_PositionAdded;
+            Core.Instance.TradeAdded += Instance_TradeAdded;
+            Core.Instance.PositionRemoved += Instance_PositionRemoved;
 
-            this.Status = "Started";
+            Status = "Started";
         }
 
 
-        public List<PlaceOrderRequestParameters> SetTarget(Cloud cloud , double target, MyTradeType type)
+        public List<PlaceOrderRequestParameters> SetTarget(Cloud cloud, double target, TypeOfPosition type)
         {
             List<PlaceOrderRequestParameters> output = new List<PlaceOrderRequestParameters>();
 
@@ -102,7 +103,7 @@ namespace PlaceOrder
 
                 for (int i = 0; i < numberOfCloses; i++)
                 {
-                    levelsList.Add(clMin + (step * i));
+                    levelsList.Add(clMin + step * i);
                 }
             }
 
@@ -125,13 +126,13 @@ namespace PlaceOrder
                     switch (cloud.Color)
                     {
                         case CloudColor.green:
-                            tpList.Add(levelsList[i] - (levelsList[i] * tp));
-                            sList.Add(levelsList[i] + (levelsList[i] * sl));
+                            tpList.Add(levelsList[i] - levelsList[i] * tp);
+                            sList.Add(levelsList[i] + levelsList[i] * sl);
                             break;
 
                         case CloudColor.red:
-                            tpList.Add(levelsList[i] + (levelsList[i] * tp));
-                            sList.Add(levelsList[i] - (levelsList[i] * sl));
+                            tpList.Add(levelsList[i] + levelsList[i] * tp);
+                            sList.Add(levelsList[i] - levelsList[i] * sl);
                             break;
                     }
                 }
@@ -151,8 +152,8 @@ namespace PlaceOrder
                     tps.Add(_tp);
                 }
 
-                string orderTypeId = Core.Instance.OrderTypes.FirstOrDefault(x => x.ConnectionId == this.symbol.ConnectionId && x.Behavior == OrderTypeBehavior.Limit).Id;
-                double qt = type == MyTradeType.Cover ? coverTradesAmmount : mainTradesAmmount;
+                string orderTypeId = Core.Instance.OrderTypes.FirstOrDefault(x => x.ConnectionId == symbol.ConnectionId && x.Behavior == OrderTypeBehavior.Limit).Id;
+                double qt = type == TypeOfPosition.Cover ? coverTradesAmmount : mainTradesAmmount;
 
                 for (int i = 0; i < levelsList.Count; i++)
                 {
@@ -175,7 +176,7 @@ namespace PlaceOrder
 
             foreach (PlaceOrderRequestParameters item in output)
             {
-                item.Comment = MyTradeType.Cover.ToString();
+                item.Comment = TypeOfPosition.Cover.ToString();
                 PlaceOrderRequestParameters pc = PlaceOrder(item);
                 if (pc != null)
                     x.Add(pc);
@@ -184,29 +185,29 @@ namespace PlaceOrder
             return x;
         }
 
-        private PlaceOrderRequestParameters? PlaceOrder(PlaceOrderRequestParameters placeOrderRequest)
+        private PlaceOrderRequestParameters PlaceOrder(PlaceOrderRequestParameters placeOrderRequest)
         {
             if (closed)
                 return null;
 
-            if (placeOrderRequest.Comment != MyTradeType.Cover.ToString() || placeOrderRequest.Comment != MyTradeType.Main.ToString())
-                Log("Uncorrect Comment ... should be close" , LoggingLevel.Trading);
+            if (placeOrderRequest.Comment != TypeOfPosition.Cover.ToString() || placeOrderRequest.Comment != TypeOfPosition.Main.ToString())
+                Log("Uncorrect Comment ... should be close", LoggingLevel.Trading);
 
             CalculateRamainingQuantity();
 
-            if (placeOrderRequest.Comment == MyTradeType.Main.ToString())
+            if (placeOrderRequest.Comment == TypeOfPosition.Main.ToString())
                 placeOrderRequest.Quantity = placeOrderRequest.Quantity <= remainingTradesQuantity ? placeOrderRequest.Quantity : remainingTradesQuantity;
 
-            if(placeOrderRequest.Comment == MyTradeType.Cover.ToString())
+            if (placeOrderRequest.Comment == TypeOfPosition.Cover.ToString())
                 placeOrderRequest.Quantity = placeOrderRequest.Quantity <= remainingCoverQuantity ? placeOrderRequest.Quantity : remainingCoverQuantity;
 
-            if(placeOrderRequest.Quantity <= 0)
+            if (placeOrderRequest.Quantity <= 0)
             {
-                this.Log("Arlady Exposed", LoggingLevel.Trading);
+                Log("Arlady Exposed", LoggingLevel.Trading);
                 return null;
             }
 
-            placeOrderRequest.SendingSource = this.Name;
+            placeOrderRequest.SendingSource = Name;
             return placeOrderRequest;
 
             //var resoul = Core.Instance.PlaceOrder(placeOrderRequest);
@@ -228,7 +229,7 @@ namespace PlaceOrder
         #region Events
         private void Instance_PositionRemoved(Position obj)
         {
-            if(ActivePositions.Contains(obj))
+            if (ActivePositions.Contains(obj))
                 ActivePositions.Remove(obj);
 
             if (ActivePositions != Core.Instance.Positions.ToList())
@@ -237,18 +238,18 @@ namespace PlaceOrder
 
         private void Instance_TradeAdded(Trade obj)
         {
-            if(!Trades.Contains(obj))
+            if (!Trades.Contains(obj))
                 Trades.Add(obj);
         }
 
         private void Instance_PositionAdded(Position obj)
         {
-            if(!ActivePositions.Contains(obj))
+            if (!ActivePositions.Contains(obj))
                 ActivePositions.Add(obj);
         }
         private void Instance_OrderAdded(Order obj)
         {
-            if(openedOrders.Contains(obj))
+            if (openedOrders.Contains(obj))
                 ActiveOrderders.Remove(obj);
         }
         #endregion
@@ -257,7 +258,7 @@ namespace PlaceOrder
         public void Close()
         {
 
-            this.Status = "Closed";
+            Status = "Closed";
             //this.closed = true;
         }
 
@@ -269,10 +270,10 @@ namespace PlaceOrder
         private void CalculateRamainingQuantity()
         {
             double tradeQty = Core.Instance.Positions.Where(x => x.Side == Side.Sell).Sum(x => x.Quantity) +
-                Core.Instance.Orders.Where(x => x.Comment == MyTradeType.Main.ToString() && x.Status == OrderStatus.Opened).Sum(x => x.TotalQuantity);
+                Core.Instance.Orders.Where(x => x.Comment == TypeOfPosition.Main.ToString() && x.Status == OrderStatus.Opened).Sum(x => x.TotalQuantity);
 
             double coverQty = Core.Instance.Positions.Where(x => x.Side == Side.Sell).Sum(x => x.Quantity) +
-                Core.Instance.Orders.Where(x => x.Comment == MyTradeType.Cover.ToString() && x.Status == OrderStatus.Opened).Sum(x => x.TotalQuantity);
+                Core.Instance.Orders.Where(x => x.Comment == TypeOfPosition.Cover.ToString() && x.Status == OrderStatus.Opened).Sum(x => x.TotalQuantity);
 
             remainingTradesQuantity = mainTradesAmmount - tradeQty;
             remainingCoverQuantity = coverTradesAmmount - coverQty;

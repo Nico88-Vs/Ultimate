@@ -8,11 +8,11 @@ using TheIndicator.LibreriaDiClassi;
 using TradingPlatform.BusinessLayer;
 using TradingPlatform.BusinessLayer.Integration;
 
-namespace StrategyRun
+namespace StrategyRun.Strategie
 {
     public class TrendStrategy : GetCondiction
     {
-        public override CloudSeries Series { get; set;}
+        public override CloudSeries Series { get; set; }
         public override string Name { get; }
         public override string Description { get; }
         public override int Buffer { get; }
@@ -26,14 +26,14 @@ namespace StrategyRun
 
         public TrendStrategy(CloudSeries serie, bool gapFilter) : base(serie)
         {
-            this.GapsFiltered = gapFilter;
-            shDetector = new Shapes(this.Series , this.GapsFiltered);
+            GapsFiltered = gapFilter;
+            shDetector = new Shapes(Series, GapsFiltered);
 
             GetShape(TF.TimeFrame.Fast);
             GetShape(TF.TimeFrame.Mid);
             GetShape(TF.TimeFrame.Slow);
 
-            Series.Cross += this.Series_Cross;
+            Series.Cross += Series_Cross;
         }
 
         private void Series_Cross(object sender, CrossEvent e)

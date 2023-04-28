@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 
 namespace TheIndicator.Enum
 {
-    [Serializable]
     public struct Condiction
     {
         public enum Trend

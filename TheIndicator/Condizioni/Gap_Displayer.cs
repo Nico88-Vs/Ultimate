@@ -1,17 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
 using TheIndicator.Enum;
 using TheIndicator.LibreriaDiClassi;
 using TradingPlatform.BusinessLayer;
 
 namespace TheIndicator.Interfacce
 {
-    [Serializable]
-    public class Displayer : GetCondiction
+    public class Gap_Displayer : GetCondiction
     {
         public Condiction Condiction { get; set; }
         public override CloudSeries Series { get; set; }
@@ -22,9 +18,8 @@ namespace TheIndicator.Interfacce
         public DateTime StartData { get; private set; }
         public DateTime EndData { get; private set; }
         public override int Buffer { get; }
-        public override Sentiment Sentiment { get; set; }
 
-        public Displayer( CloudSeries series) : base (series)
+        public Gap_Displayer( CloudSeries series) : base (series)
         {
             this.Condiction = new Condiction();
             this.Series = series;
@@ -37,7 +32,7 @@ namespace TheIndicator.Interfacce
             this.EndData = this.Series.Hd.ToTime;
         }
 
-        public new Condiction.Stato ReturnStato()
+        public Condiction.Stato ReturnStato()
         {
             Condiction.Stato stato = Condiction.Stato.WaitingCloseLong;
             foreach (Cloud item in Series.Clouds)
@@ -50,7 +45,7 @@ namespace TheIndicator.Interfacce
             return stato;
         }
 
-        public new Condiction.Strutture ReturnStrutture()
+        public  Condiction.Strutture ReturnStrutture()
         {
             return Condiction.Strutture.PivotPoint;
         }

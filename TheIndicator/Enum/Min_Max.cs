@@ -6,8 +6,7 @@ using System.Threading.Tasks;
 
 namespace TheIndicator.Enum
 {
-    [Serializable]
-    public class Min_Max
+    public struct Min_Max
     {
         public int Id { get; set; }
         public double Value { get; set; }

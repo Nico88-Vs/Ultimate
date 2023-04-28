@@ -6,9 +6,10 @@ using System.Linq;
 using TradingPlatform.BusinessLayer;
 using TheIndicator;
 using TheIndicator.LibreriaDiClassi;
-using TheIndicator.Enum;
-using PlaceOrder;
+using StrategyRun.Strategie;
 using System.Threading.Tasks;
+using StrategyRun.Order_Placer;
+using StrategyRun.Headg_Manager;
 
 namespace StrategyRun
 {
@@ -130,7 +131,7 @@ namespace StrategyRun
         
         private void Place(Cloud c)
         {
-            List<PlaceOrderRequestParameters> y = customPlacer.SetTarget(c, 0.01, MyTradeType.Cover);
+            List<PlaceOrderRequestParameters> y = customPlacer.SetTarget(c, 0.01, TypeOfPosition.Cover);
 
             foreach (var item in y)
             {
@@ -275,7 +276,7 @@ namespace StrategyRun
             result.Add("GapFilter", gapFilter);
             if(crosStrategy != null)
             {
-                result.Add("Sentiment", crosStrategy.Sentiment);
+                result.Add("CurrentSent", crosStrategy.CurrentSent);
                 result.Add("Cloud TF ", crosStrategy.currentTF);
                 result.Add("Cloud  ID ", crosStrategy.TradableCloudID);
 

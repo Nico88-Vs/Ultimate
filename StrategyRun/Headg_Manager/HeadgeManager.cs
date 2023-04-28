@@ -8,31 +8,48 @@ using TheIndicator.LibreriaDiClassi;
 using TradingPlatform.BusinessLayer;
 using TheIndicator.Enum;
 using TheIndicator.Interfacce;
+using StrategyRun.Strategie;
 
 namespace StrategyRun.Headg_Manager
 {
+    public enum TypeOfPosition
+    {
+        Main,
+        Cover
+    }
+
     public class HeadgeManager
     {
         private enum Status { WaitingCover, WaitingMain, FullFilled }
         public Covers Covers { get; set; }
         public MainTrades MainTrades { get; set; }
+        public SwitchSentiment SentimentObj { get; set; }
 
         private Account account;
         private Symbol symbol;
-        private Status status;
         private CloudSeries Series;
-        private GetCondiction condiction;
-        private Type conType;
+        private Condic_Gap_Cros_Strategy_V1 condiction;
 
-        public HeadgeManager(CloudSeries serie, Account account, Symbol symbol, GetCondiction cond)
+
+        public HeadgeManager(Account account, Symbol symbol, Condic_Gap_Cros_Strategy_V1 cond, SwitchSentiment sentObj)
         {
             this.condiction = cond;
-            this.conType = cond.GetType();
-            this.Series = serie;
-            this.account = account;
+            this.Series = cond.Series;
+            this.account = account; 
             this.symbol = symbol;
-            this.MainTrades = new MainTrades(0, cond.Sentiment);
+            this.MainTrades = new MainTrades(0, "test");
             this.Covers = new Covers(this.MainTrades);
+            this.SentimentObj = sentObj;
+
+            this.SentimentObj.SentimentChanged += this.Sentiment_SentimentChanged; 
+        }
+
+        private void Sentiment_SentimentChanged(object sender, SwitchSentiment e)
+        {
+            if(e.NewSentiment == Sentiment.Wait)
+            {
+
+            }
         }
 
         private void DeterminaStatus()
@@ -75,5 +92,7 @@ namespace StrategyRun.Headg_Manager
                 }
             }
         }
+
+       
     }
 }

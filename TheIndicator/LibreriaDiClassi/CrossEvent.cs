@@ -7,7 +7,16 @@ using TheIndicator.Enum;
 
 namespace TheIndicator.LibreriaDiClassi
 {
-    [Serializable]
+    public enum EventCrosArg
+    {
+        Gold_fast,
+        Dead_fast,
+        Gold_midt,
+        Dead_mid,
+        Gold_slow,
+        Dead_slow,
+        Unkown
+    }
     public class CrossEvent : EventArgs
     {
         public EventCrosArg Args { get; set; }

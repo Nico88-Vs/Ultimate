@@ -10,3 +10,15 @@
 	MISURARE VOLATILITA'
 	MISURARE MOMENTO
 	MISURARE LA SINGOLA UNITA SUL TOTALE
+
+
+
+
+	.......
+	Second Fork _ Set_Sentiment_And_Headging
+
+	Sentiment Change  
+	             gerarchia chiamate +o- { Strategy >> condizione >> Headge manager >> Main __ Cover}
+				                                                     sentiment 
+      
+	  Eliminare Place Order?

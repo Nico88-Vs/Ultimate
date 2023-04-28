@@ -25,7 +25,6 @@ namespace TheIndicator.Interfacce
         public override string Description { get; }
         public override CloudSeries Series { get; set; }
         public bool GapFilter { get; set; }
-        public override Sentiment Sentiment { get; set; }
 
 
         public Shapes( CloudSeries serie, bool filter) : base(serie)

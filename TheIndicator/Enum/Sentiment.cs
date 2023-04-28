@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TheIndicator.Enum
 {
@@ -13,13 +9,31 @@ namespace TheIndicator.Enum
 
     public class SwitchSentiment : EventArgs
     {
+        public event EventHandler<SwitchSentiment> SentimentChanged;
         public Sentiment NewSentiment { get; set; }
-        public Sentiment OldSentimennt { get; set; }
+        private Sentiment OldSentimennt = Sentiment.Wait;
 
-        public SwitchSentiment(Sentiment oldSentiment, Sentiment newSentiment)
+        public SwitchSentiment(Sentiment newSentiment)
         {
-            this.OldSentimennt = oldSentiment;
             this.NewSentiment = newSentiment;
+
+            if(this.NewSentiment != this.OldSentimennt)
+            {
+                OnSentimentChanged(this);
+            }
+        }
+
+        public virtual void OnSentimentChanged(SwitchSentiment e)
+        {
+            SentimentChanged?.Invoke(this, e);
+            this.OldSentimennt = this.NewSentiment;
+        }
+
+        public void Switch(Sentiment newSentiment)
+        {
+            this.NewSentiment = newSentiment;
+            if (this.NewSentiment != this.OldSentimennt)
+                this.OnSentimentChanged(this);
         }
     }
 }

@@ -15,7 +15,8 @@ namespace StrategyRun.Headg_Manager
         public MainTrades Main { get; set; }
         public List<Order> Orders { get; set; }
         public List<Position> Positions { get; set; }
-        public Sentiment Sentiment { get; set; }
+        public Sentiment Sent { get; set; } = Sentiment.Wait;
+
 
         public Covers(MainTrades main)
         {
@@ -23,24 +24,6 @@ namespace StrategyRun.Headg_Manager
             this.ID = main.ID;
             this.Orders = new List<Order>();
             this.Positions = new List<Position>();
-
-            main.SentimentChanged += this.Main_SentimentChanged;
-        }
-
-        private void Main_SentimentChanged(object sender, SwitchSentiment e)
-        {
-            switch (e.NewSentiment)
-            {
-                case Sentiment.Buy:
-                    this.Sentiment = Sentiment.Sell;
-                    break;
-                case Sentiment.Sell:
-                    this.Sentiment = Sentiment.Buy;
-                    break;
-                case Sentiment.Wait:
-                    this.Sentiment = Sentiment.Wait;
-                    break;
-            }
         }
     }
 }

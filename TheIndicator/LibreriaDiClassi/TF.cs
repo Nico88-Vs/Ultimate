@@ -7,7 +7,6 @@ using TradingPlatform.BusinessLayer;
 
 namespace TheIndicator.LibreriaDiClassi
 {
-    [Serializable]
     public class TF
     {
         public int Delay { get; set; }

@@ -22,8 +22,6 @@ namespace TheIndicator.LibreriaDiClassi
         UNDEFINED
     }
 
-
-    [Serializable]
     public class CloudSeries
     {
         #region Variabili

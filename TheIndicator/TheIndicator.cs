@@ -15,7 +15,16 @@ using TradingPlatform.BusinessLayer;
 
 namespace TheIndicator
 {
-	public class TheIndicator : Indicator 
+    public enum TypeOfValue
+    {
+        lenght,
+        buffer,
+        buffer_plus_lenght,
+        minFast,
+        id,
+        color
+    }
+    public class TheIndicator : Indicator 
     {
         [InputParameter("GapsFiltered", 1)]
         private bool gapFilter = true;
@@ -28,7 +37,7 @@ namespace TheIndicator
         private XmlSerializer Serializzatore;
 
         //Test
-        Displayer condizione;
+        Gap_Displayer condizione;
         Shapes shapeCondiction;
         Shapes opposiShape;
 
@@ -72,7 +81,7 @@ namespace TheIndicator
             Series.GenerateCloud(tfList);
 
             //test
-            condizione = new Displayer(Series);
+            condizione = new Gap_Displayer(Series);
             shapeCondiction = new Shapes(Series, gapFilter);
             bool b = gapFilter == true ? false : true;
             opposiShape = new Shapes(Series, b);
@@ -199,7 +208,7 @@ namespace TheIndicator
             }
         }
 
-        private void DysplaySeries(List<Cloud> clouds, Displayer con, LineSeries lineSeries, TypeOfMin_Max ty)
+        private void DysplaySeries(List<Cloud> clouds, Gap_Displayer con, LineSeries lineSeries, TypeOfMin_Max ty)
         {
             if (!clouds.Any())
                 return;

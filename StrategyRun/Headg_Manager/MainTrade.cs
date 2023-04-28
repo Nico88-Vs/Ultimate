@@ -12,31 +12,19 @@ namespace StrategyRun.Headg_Manager
         public List<Position> Positions { get; set; }
         public List<Order> Orders { get; set; }
         public int ID { get; set; }
+        public string Name { get; private set; }
+        public Sentiment Sent { get; set; } = Sentiment.Wait;
 
-        public Sentiment Sentiment { get; set; }
-        public event EventHandler<SwitchSentiment> SentimentChanged;
 
-        private Sentiment currentSent = Sentiment.Wait;
-
-        public MainTrades(int id, Sentiment current)
+        public MainTrades(int id , string name)
         {
             this.ID = id;
             Positions = new List<Position>();
             Orders = new List<Order>();
-            this.currentSent = current;
-
-            if(currentSent != this.Sentiment)
-            {
-                SwitchSentiment arg = new SwitchSentiment(currentSent, this.Sentiment);
-                this.OnSentimentChanged(arg);
-            }
+            this.Name = name;
         }
 
-        public virtual void OnSentimentChanged(SwitchSentiment e)
-        {
-            SentimentChanged?.Invoke(this, e);
-            this.currentSent = e.NewSentiment;
-        }
+       
     }
 }
     

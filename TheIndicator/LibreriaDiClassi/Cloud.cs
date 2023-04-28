@@ -9,7 +9,6 @@ using TradingPlatform.BusinessLayer.Utils;
 
 namespace TheIndicator.LibreriaDiClassi
 {
-    [Serializable]
     public enum TypeOfMin_Max
     {
         MaximaFast,
@@ -17,6 +16,13 @@ namespace TheIndicator.LibreriaDiClassi
         MaximaSlow,
         MinimaSlow,
         bases
+    }
+
+    public enum CloudColor
+    {
+        green = 1,
+        red = -1,
+        white = 0
     }
 
     public class Cloud
