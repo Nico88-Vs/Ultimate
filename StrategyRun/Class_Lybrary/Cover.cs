@@ -7,9 +7,9 @@ using TheIndicator.LibreriaDiClassi;
 using TradingPlatform.BusinessLayer;
 using TheIndicator.Enum;
 
-namespace StrategyRun.Headg_Manager
+namespace StrategyRun.Class_Lybrary
 {
-    public class Covers
+    public struct Covers
     {
         public int ID { get; set; }
         public MainTrades Main { get; set; }
@@ -17,13 +17,12 @@ namespace StrategyRun.Headg_Manager
         public List<Position> Positions { get; set; }
         public Sentiment Sent { get; set; } = Sentiment.Wait;
 
-
         public Covers(MainTrades main)
         {
-            this.Main = main;
-            this.ID = main.ID;
-            this.Orders = new List<Order>();
-            this.Positions = new List<Position>();
+            Main = main;
+            ID = main.ID;
+            Orders = new List<Order>();
+            Positions = new List<Position>();
         }
     }
 }

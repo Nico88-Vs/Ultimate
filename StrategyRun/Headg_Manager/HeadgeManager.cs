@@ -9,6 +9,7 @@ using TradingPlatform.BusinessLayer;
 using TheIndicator.Enum;
 using TheIndicator.Interfacce;
 using StrategyRun.Strategie;
+using StrategyRun.Class_Lybrary;
 
 namespace StrategyRun.Headg_Manager
 {
@@ -30,6 +31,9 @@ namespace StrategyRun.Headg_Manager
         private CloudSeries Series;
         private Condic_Gap_Cros_Strategy_V1 condiction;
 
+        private const string MainComment = "Main";
+        private const string CoverComment = "Cover";
+
 
         public HeadgeManager(Account account, Symbol symbol, Condic_Gap_Cros_Strategy_V1 cond, SwitchSentiment sentObj)
         {
@@ -48,51 +52,27 @@ namespace StrategyRun.Headg_Manager
         {
             if(e.NewSentiment == Sentiment.Wait)
             {
+                Covers.Sent = Sentiment.Wait;
+                MainTrades.Sent = Sentiment.Wait;
+            }
 
+            if(e.NewSentiment == Sentiment.Buy)
+            {
+                Covers.Sent = Sentiment.Sell;
+                MainTrades.Sent = Sentiment.Buy;
+            }
+
+            if(e.NewSentiment == Sentiment.Sell)
+            {
+                Covers.Sent = Sentiment.Buy;
+                MainTrades.Sent = Sentiment.Sell;
             }
         }
 
-        private void DeterminaStatus()
+        private void GetPosition()
         {
-            List<Position> positions = Core.Instance.Positions.Where(x => x.Symbol == this.symbol && x.Account == this.account).ToList();
 
-            foreach (Position position in positions)
-            {
-                switch (position.Comment)
-                {
-                    case "Cover":
-                        Covers.Positions.Add(position);
-                        break;
-
-                    case "Main":
-                        MainTrades.Positions.Add(position);
-                        break;
-
-                    default:
-                        Core.Instance.Loggers.Log("Errore nel determinare lo status del HeadgeManager", loggingLevel: LoggingLevel.Trading);
-                        break;
-                }
-            }
-
-            List<Order> orders = Core.Instance.Orders.Where(x => x.Symbol == this.symbol && x.Account == this.account).ToList();
-
-            foreach (Order order in orders)
-            {
-                switch (order.Comment)
-                {
-                    case "Cover":
-                        Covers.Orders.Add(order);
-                        break;
-                    case "Main":
-                        MainTrades.Orders.Add(order);
-                        break;
-                    default:
-                        Core.Instance.Loggers.Log("Errore nel determinare lo status del HeadgeManager", loggingLevel: LoggingLevel.Trading);
-                        break;
-                }
-            }
         }
-
        
     }
 }

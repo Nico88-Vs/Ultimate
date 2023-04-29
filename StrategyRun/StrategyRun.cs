@@ -274,12 +274,12 @@ namespace StrategyRun
             result.Add("Positions_Count", $"{positions.Count}");
             result.Add("Trades_Count", $"{trades.Count}");
             result.Add("GapFilter", gapFilter);
+            result.Add("AccountName", this.account.Name);
             if(crosStrategy != null)
             {
                 result.Add("CurrentSent", crosStrategy.CurrentSent);
                 result.Add("Cloud TF ", crosStrategy.currentTF);
                 result.Add("Cloud  ID ", crosStrategy.TradableCloudID);
-
             }
             return result;
         }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using StrategyRun.Class_Lybrary;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,6 +8,7 @@ using TheIndicator.Enum;
 using TheIndicator.Interfacce;
 using TheIndicator.LibreriaDiClassi;
 using TradingPlatform.BusinessLayer;
+using TradingPlatform.BusinessLayer.Utils;
 
 namespace StrategyRun.Strategie
 {
@@ -14,42 +16,36 @@ namespace StrategyRun.Strategie
     /// TARGET : Creare una strategia bidirezzionale Definita da una condizione generale Arbitratia o Programmatica, che cerca sotto a nuvole sostanziose
     /// ______ _ ingessi in corrispondenva dei gap di mercato utilizzando i cros di tempo inferiore come validazione
     /// </summary>
-    public class Condic_Gap_Cros_Strategy_V1 : GetCondiction
+    public class Condic_Gap_Cros_Strategy_V2 : ITradeTicket
     {
-        public bool useAlgoSentiment { get; set; }
-        public Sentiment sentimentInput { get; set; } = Sentiment.Wait;
         public bool gapFilter { get; set; }
         public double thickFilter { get; set; } 
-        public int TradableCloudID { get; private set; } = -1;
-        public override CloudSeries Series { get ; set; }
+        public  CloudSeries Series { get ; set; }
         public string Status { get; private set; } = "null";
-        public override string Name { get; } = "Gap-Cross V1";
-        public override string Description { get; } = "Trading Strategy based on Mid-gap and fast cross";
-        public override int Buffer { get; } = 0;
-        public SwitchSentiment CurrentSent { get; set; }
+        public string CondictionName { get; set; } = "Gap-Cross V1";
+        public  string Description { get; } = "Trading Strategy based on Mid-gap and fast cross";
         public TF.TimeFrame currentTF { get; }
 
+        public event EventHandler<TradeTiket> TradeTicketCreated;
 
+        private List<int> gappedCloudID;
         private List<Cloud> tradeCloud;
         private List<Gaps> tradeGap;
         private Gaps? currentGap;
-        private Sentiment snt;
-
-        public Condic_Gap_Cros_Strategy_V1(CloudSeries serie , bool usealgo = true, TF.TimeFrame midorsloTf= TF.TimeFrame.Mid,
-            bool gapFilter = false, double thickfilter = 0.5) : base(serie)
+        private CloudColor gappedCloudColor = CloudColor.white;
+        private TradeTiket ticket;
+        
+        public Condic_Gap_Cros_Strategy_V2(CloudSeries serie , TF.TimeFrame midorsloTf= TF.TimeFrame.Mid,
+            bool gapFilter = false, double thickfilter = 0.5)
         {
             this.currentTF = midorsloTf;
-            this.useAlgoSentiment = usealgo;
             this.gapFilter = gapFilter;
             this.thickFilter = thickfilter;
-
-            this.CurrentSent = new SwitchSentiment(sentimentInput);
-            this.snt = this.CurrentSent.NewSentiment;
+            this.ticket = new TradeTiket();
 
             tradeCloud = new List<Cloud>();
             tradeGap = new List<Gaps>();
-
-            SetSentiment();
+            this.gappedCloudID = new List<int>();
 
             if(currentTF == TF.TimeFrame.Fast)
             {
@@ -61,26 +57,25 @@ namespace StrategyRun.Strategie
                 Series.Cross += this.Series_Cross;
         }
 
-        /// <summary>
-        /// Compose List Of clouds Under Gaps
-        /// </summary>
-        public void GetFastTradableCloud()
+        public void Update()
         {
-            SetSentiment();
+            GetFastTradableCloud();
+            GetEntry();
+        }
 
-            if(this.CurrentSent.NewSentiment == Sentiment.Wait)
-                return;
-
+        private void GetFastTradableCloud()
+        {
             if(currentTF != TF.TimeFrame.Mid && currentTF != TF.TimeFrame.Slow)
             {
                 Log("Current TF wrong value assignment", LoggingLevel.Trading);
                 return;
             }
 
+            // Vrifico se ci sono gap da tradare
             if (!tradeGap.Any())
                 return;
 
-            // Get Correct Cloud
+            // Get Last Cloud
             Cloud c = currentTF == TF.TimeFrame.Mid ? Series.CurrentCloud : Series.CurrentMidCloud;
 
             int position = c.Buffer + c.Time_F.GetCorrectBuffer(Series.TenkanPeriod);
@@ -88,11 +83,23 @@ namespace StrategyRun.Strategie
             int debug = position - c.Time_F.GetCorrectBuffer(Series.TenkanPeriod);
 
             Gaps? g = null;
+
+            //Getting Gap
             try
             {
                 g = tradeGap.FindAll(i => i.Buffer + midtfperio > position).First();
+                if(g != null)
+                {
+                    Gaps x = (Gaps)g;
+                    int indexg = tradeGap.IndexOf(x);
+                    if(this.currentTF == TF.TimeFrame.Mid)
+                        gappedCloudColor = Series.Clouds[gappedCloudID[indexg]].Color;
+                    else if(this.currentTF == TF.TimeFrame.Slow)
+                        gappedCloudColor = Series.CloudsMid[gappedCloudID[indexg]].Color;
+                }
 
-                if(g is not null)
+
+                if (g is not null)
                 {
                     Gaps d = (Gaps)g;
                     if (d.type == Gaps.Type.inverse)
@@ -114,6 +121,8 @@ namespace StrategyRun.Strategie
 
                 this.Status = "Running";
             }
+
+            //Getting Cloud
             else
             { 
                 if(currentGap != null)
@@ -124,9 +133,8 @@ namespace StrategyRun.Strategie
                     if (position + c.Length > v.Buffer + midtfperio)
                     {
                         Cloud selected = currentTF == TF.TimeFrame.Mid ? Series.Clouds.Last(c => c.Buffer <= delayBuffer) : Series.CloudsMid.Last(c => c.Buffer <= delayBuffer);
-                        CloudColor cloudSelectedColor = this.snt == Sentiment.Buy ? CloudColor.red : CloudColor.green;
 
-                        if (selected.Color != cloudSelectedColor)
+                        if (selected.Color != gappedCloudColor)
                             currentGap = null;
                     }
                 }
@@ -136,25 +144,19 @@ namespace StrategyRun.Strategie
                     this.Status = "Waiting"; 
                 }
             }
-
-            GetEntry();
         }
 
-        /// <summary>
-        /// Gets Tradable Cloud Under Gap
-        /// </summary>
         private void GetEntry()
         {
-            if (!tradeCloud.Any())
+            if (!tradeCloud.Any() || gappedCloudColor == CloudColor.white)
             {
-                TradableCloudID = -1;
                 return;
             }
                 
 
             Cloud x = currentTF == TF.TimeFrame.Mid ? Series.CurrentCloud : Series.CurrentMidCloud;
-            CloudColor cloudSelectedColor = this.snt == Sentiment.Buy ? CloudColor.green : CloudColor.red;
-            CloudColor tradeCloudColor = this.snt == Sentiment.Buy ? CloudColor.red : CloudColor.green;
+            CloudColor cloudSelectedColor = gappedCloudColor == CloudColor.red ? CloudColor.green : CloudColor.red;
+            CloudColor tradeCloudColor = gappedCloudColor == CloudColor.red ? CloudColor.red : CloudColor.green;
 
             if (x.Thickness > x.AverageList.Last() && x.Color == cloudSelectedColor)
             {
@@ -166,13 +168,13 @@ namespace StrategyRun.Strategie
                     switch (w.RoofList.Any())
                     {
                         case true:
-                            Bases b = this.snt == Sentiment.Buy ?  w.RoofList.OrderBy(x => x.Value).First() : w.RoofList.OrderBy(x => x.Value).Last();
+                            Bases b = gappedCloudColor == CloudColor.red ?  w.RoofList.OrderBy(x => x.Value).First() : w.RoofList.OrderBy(x => x.Value).Last();
                             min = b.Value;
                             //Log("Conta Anche Le Basi Da 2", LoggingLevel.Error);
                             break;
 
                         case false:
-                            min = this.snt == Sentiment.Buy ? w.MinimaFast.Last().Value : w.MaximaFast.Last().Value;
+                            min = gappedCloudColor == CloudColor.red ? w.MinimaFast.Last().Value : w.MaximaFast.Last().Value;
                             break;
                     }
 
@@ -180,7 +182,7 @@ namespace StrategyRun.Strategie
                     switch (x.MinimaSlow.Any())
                     {
                         case true:
-                            val = this.snt == Sentiment.Buy ? x.MinimaSlow.Last().Value : x.MaximaSlow.Last().Value;
+                            val = gappedCloudColor == CloudColor.red ? x.MinimaSlow.Last().Value : x.MaximaSlow.Last().Value;
                             break;
 
                         case false:
@@ -190,40 +192,39 @@ namespace StrategyRun.Strategie
 
                     //Log("Last Condiction Cek", LoggingLevel.Error);
 
-                    switch (this.snt)
+                    switch (gappedCloudColor)
                     {
-                        case Sentiment.Buy:
+                        case CloudColor.red:
                             if (val > min)
-                                TradableCloudID = w.Id;
+                                CeckTradeTiket(w);
                             else
-                                TradableCloudID = -1;
+                                return;
                             break;
 
-                        case Sentiment.Sell:
+                        case CloudColor.green:
                             if (val < min)
-                                TradableCloudID = w.Id;
+                                CeckTradeTiket(w);
                             else
-                                TradableCloudID = -1;
+                                return;
                             break;
 
-                        case Sentiment.Wait:
-                            TradableCloudID = -1;
-                            break;
+                        case CloudColor.white:
+                            return;
                     }
                    
                 }
                 catch (Exception)
                 {
-                    TradableCloudID = -1; ;
+                    return; ;
                 }
             }
             else
             {
-                TradableCloudID = -1;
+                return;
             }
         }
 
-        #region Events
+        #region Events Subscription
         private void Series_Cross(object sender, CrossEvent e)
         {
             switch (currentTF)
@@ -274,16 +275,13 @@ namespace StrategyRun.Strategie
                         return;
                     if (c.Color == CloudColor.white)
                         return;
-                    if (c.Color == CloudColor.red & this.snt == Sentiment.Sell)
-                        return;
-                    if (c.Color == CloudColor.green & this.snt == Sentiment.Buy)
-                        return;
                     if (gapFilter && e.Gap.GapReason == Gaps.Reason.bases)
                         return;
                     if (e.Gap.type == Gaps.Type.inverse)
                         return;
 
                     tradeGap.Add(e.Gap);
+                    gappedCloudID.Add(e.CludId);
 
                     break;
                 case TF.TimeFrame.Slow:
@@ -291,81 +289,77 @@ namespace StrategyRun.Strategie
                         return;
                     if (c.Color == CloudColor.white)
                         return;
-                    if (c.Color == CloudColor.red & this.snt == Sentiment.Sell)
-                        return;
-                    if (c.Color == CloudColor.green & this.snt == Sentiment.Buy)
-                        return;
                     if (gapFilter && e.Gap.GapReason == Gaps.Reason.bases)
                         return;
                     if (e.Gap.type == Gaps.Type.inverse)
                         return;
 
                     tradeGap.Add(e.Gap);
+                    gappedCloudID.Add(e.CludId);
                     break;
             }
         }
         #endregion
 
         #region Services
-        private void SetSentiment()
-        {
-            if (!useAlgoSentiment)
-                this.CurrentSent.NewSentiment = sentimentInput;
-
-            else if (useAlgoSentiment)
-            {
-                switch (Series.Scenario)
-                {
-                    case IchimokuCloudScenario.STRONG_BULLISH:
-                        this.CurrentSent.Switch(Sentiment.Sell);
-                        break;
-                    case IchimokuCloudScenario.STRONG_BEARISH:
-                        this.CurrentSent.Switch(Sentiment.Buy);
-                        break;
-                    case IchimokuCloudScenario.MODERATELY_BULLISH:
-                        this.CurrentSent.Switch(Sentiment.Buy);
-                        break;
-                    case IchimokuCloudScenario.MODERATELY_BEARISH:
-                        this.CurrentSent.Switch(Sentiment.Sell);
-                        break;
-                    case IchimokuCloudScenario.CONSOLIDATION_BULLISH:
-                        this.CurrentSent.Switch(Sentiment.Sell);
-                        break;
-                    case IchimokuCloudScenario.CONSOLIDATION_BEARISH:
-                        this.CurrentSent.Switch(Sentiment.Buy);
-                        break;
-                    case IchimokuCloudScenario.UNDEFINED:
-                        this.CurrentSent.Switch(Sentiment.Wait);
-                        break;
-                    default:
-                        this.CurrentSent.Switch(Sentiment.Wait);
-                        break;
-                }
-            }
-        }
-
-        public override void DisplayCondiction(TF.TimeFrame tf)
-        {
-            if (tf != TF.TimeFrame.Fast)
-            {
-                Core.Instance.Loggers.Log("This Strategy Works on Fast TF", LoggingLevel.Error);
-                return;
-            }
-
-            foreach (Cloud item in tradeCloud)
-            {
-                item.Condiction.Clear();
-
-                for (int i = 0; i < item.LenghtList.Count; i++)
-                {
-                    item.Condiction.Add(item.LenghtList[i]);
-                }
-            }
-        }
-
         private void Log(string message, LoggingLevel lvl)
         {
             Core.Instance.Loggers.Log(message, lvl);
+        }
+
+        private void CeckTradeTiket(Cloud c)
+        {
+            TradeTiket t = new TradeTiket();
+
+            switch (currentTF)
+            {
+                case TF.TimeFrame.Fast:
+                    Log("Wrong Tf selected", LoggingLevel.Trading);
+                    break;
+
+                case TF.TimeFrame.Mid:
+                    t.Dyctionary = DicManager(c, Series.MidCloudDictionary);
+                    break;
+
+                case TF.TimeFrame.Slow:
+                    t.Dyctionary = DicManager(c, Series.MidInSlowDictionary);
+                    break;
+            }
+
+            t.TradeSentiment = c.Color == CloudColor.red ? Sentiment.Buy : c.Color == CloudColor.green ? Sentiment.Sell : Sentiment.Wait;
+            t.ClaudId = c.Id;
+            t.CondictionName = this.CondictionName;
+
+            if (t.Equals(ticket))
+            {
+                this.OnTiketCreated(t);
+                ticket = t;
+            }
+        }
+
+        private Dictionary<Cloud, List<Cloud>> DicManager(Cloud c, Dictionary<Cloud , List<Cloud>> dico)
+        {
+            bool exist = dico.Any(x => x.Equals(c));
+            Dictionary<Cloud, List<Cloud>> output = new Dictionary<Cloud, List<Cloud>>();
+
+            if (exist)
+            {
+                foreach (KeyValuePair<Cloud, List<Cloud>> pair in dico)
+                {
+                    if(pair.Value.Contains(c))
+                        output.Add(pair.Key, pair.Value);
+                }
+            }
+            else
+            {
+                this.Status = "Unable to build Dictionary";
+            }
+           return output;
+        }
+
+        public virtual void OnTiketCreated(TradeTiket e)
+        {
+            TradeTicketCreated?.Invoke(this, e);
         }
         #endregion
     }
