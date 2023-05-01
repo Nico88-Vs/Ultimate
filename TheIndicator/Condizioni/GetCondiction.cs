@@ -8,7 +8,6 @@ using TheIndicator.LibreriaDiClassi;
 
 namespace TheIndicator.Interfacce
 {
-    [Serializable]
     public abstract class GetCondiction
     {
         public abstract CloudSeries  Series { get; set; }

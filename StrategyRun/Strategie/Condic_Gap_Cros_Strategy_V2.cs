@@ -328,9 +328,9 @@ namespace StrategyRun.Strategie
 
             t.TradeSentiment = c.Color == CloudColor.red ? Sentiment.Buy : c.Color == CloudColor.green ? Sentiment.Sell : Sentiment.Wait;
             t.ClaudId = c.Id;
-            t.CondictionName = this.CondictionName;
+            t.TFrame = c.Time_F;
 
-            if (t.Equals(ticket))
+            if (!t.Equals(ticket))
             {
                 this.OnTiketCreated(t);
                 ticket = t;

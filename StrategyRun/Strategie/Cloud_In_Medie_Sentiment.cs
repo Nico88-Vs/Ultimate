@@ -21,7 +21,7 @@ namespace StrategyRun.Strategie
             this.serie = series;
         }
 
-        private void SetSentiment()
+        public void SetSentiment()
         {
             switch (serie.Scenario)
             {

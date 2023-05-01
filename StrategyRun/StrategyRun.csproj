@@ -10,7 +10,7 @@
     <RootNamespace>StrategyRun</RootNamespace>
     <StartAction>Program</StartAction>
     <StartProgram>A:\Quantower\TradingPlatform\v1.130.11\Console.StarterNew.exe</StartProgram>
-    <StartArguments>--address 127.0.0.1 --port 49165</StartArguments>
+    <StartArguments>--address 127.0.0.1 --port 49784</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <OutputPath>A:\Quantower\TradingPlatform\v1.130.11\..\..\Settings\Scripts\Strategies\StrategyRun</OutputPath>

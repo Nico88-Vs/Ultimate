@@ -9,7 +9,6 @@ namespace TheIndicator.Interfacce
 {
     public class Gap_Displayer : GetCondiction
     {
-        public Condiction Condiction { get; set; }
         public override CloudSeries Series { get; set; }
         public override string Description  { get; }
         public override string Name { get; }
@@ -21,7 +20,6 @@ namespace TheIndicator.Interfacce
 
         public Gap_Displayer( CloudSeries series) : base (series)
         {
-            this.Condiction = new Condiction();
             this.Series = series;
             this.Buffer = series.Hd.Count;
             this.Description = "Mostra Oggetti, di base i gap";
@@ -30,24 +28,6 @@ namespace TheIndicator.Interfacce
             this.Symbol = this.Series.Hd.Symbol;
             this.StartData = this.Series.Hd.FromTime;
             this.EndData = this.Series.Hd.ToTime;
-        }
-
-        public Condiction.Stato ReturnStato()
-        {
-            Condiction.Stato stato = Condiction.Stato.WaitingCloseLong;
-            foreach (Cloud item in Series.Clouds)
-            {
-                if (item.Gap.Any())
-                    stato = Condiction.Stato.WaitingLong;
-
-                else stato = Condiction.Stato.WaitingShort;
-            }
-            return stato;
-        }
-
-        public  Condiction.Strutture ReturnStrutture()
-        {
-            return Condiction.Strutture.PivotPoint;
         }
 
         public override void DisplayCondiction(TF.TimeFrame tf)
