@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using TheIndicator.Enum;
 using TheIndicator.LibreriaDiClassi;
 
-namespace StrategyRun.Strategie
+namespace StrategyRun.Sentiments_Strategies
 {
     public class Cloud_In_Medie_Sentiment : ISentiment
     {
@@ -18,7 +18,8 @@ namespace StrategyRun.Strategie
 
         public Cloud_In_Medie_Sentiment(CloudSeries series)
         {
-            this.serie = series;
+            serie = series;
+            CurrentSent = new SwitchSentiment(Sentiment.Wait);
         }
 
         public void SetSentiment()
@@ -26,28 +27,28 @@ namespace StrategyRun.Strategie
             switch (serie.Scenario)
             {
                 case IchimokuCloudScenario.STRONG_BULLISH:
-                    this.CurrentSent.Switch(Sentiment.Sell);
+                    CurrentSent.Switch(Sentiment.Sell);
                     break;
                 case IchimokuCloudScenario.STRONG_BEARISH:
-                    this.CurrentSent.Switch(Sentiment.Buy);
+                    CurrentSent.Switch(Sentiment.Buy);
                     break;
                 case IchimokuCloudScenario.MODERATELY_BULLISH:
-                    this.CurrentSent.Switch(Sentiment.Buy);
+                    CurrentSent.Switch(Sentiment.Buy);
                     break;
                 case IchimokuCloudScenario.MODERATELY_BEARISH:
-                    this.CurrentSent.Switch(Sentiment.Sell);
+                    CurrentSent.Switch(Sentiment.Sell);
                     break;
                 case IchimokuCloudScenario.CONSOLIDATION_BULLISH:
-                    this.CurrentSent.Switch(Sentiment.Sell);
+                    CurrentSent.Switch(Sentiment.Sell);
                     break;
                 case IchimokuCloudScenario.CONSOLIDATION_BEARISH:
-                    this.CurrentSent.Switch(Sentiment.Buy);
+                    CurrentSent.Switch(Sentiment.Buy);
                     break;
                 case IchimokuCloudScenario.UNDEFINED:
-                    this.CurrentSent.Switch(Sentiment.Wait);
+                    CurrentSent.Switch(Sentiment.Wait);
                     break;
                 default:
-                    this.CurrentSent.Switch(Sentiment.Wait);
+                    CurrentSent.Switch(Sentiment.Wait);
                     break;
             }
         }

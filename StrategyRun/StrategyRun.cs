@@ -10,6 +10,10 @@ using StrategyRun.Strategie;
 using System.Threading.Tasks;
 using StrategyRun.Order_Placer;
 using StrategyRun.Headg_Manager;
+using StrategyRun.Sentiments_Strategies;
+using StrategyRun.HeadgeStrategy;
+using StrategyRun.Class_Lybrary;
+using StrategyRun.HeadgeStrategyi;
 
 namespace StrategyRun
 {
@@ -49,17 +53,18 @@ namespace StrategyRun
         [InputParameter("Ammount", 4)]
         private double ammount = 33;
 
-        private List<Trade> trades;
-        private List<Position> positions;
         private Indicator Indi;
         private HistoricalData historicalData;
         private int minutesInHd = 0;
         private TF Fast;
         private TF Mid;
         private TF Slow;    
-        private Condic_Gap_Cros_Strategy_V1 crosStrategy;
         public CloudSeries Serie;
-        private CustomOrderPlacer customPlacer;
+
+        private Cros_Sentiment_Strategy sentStrategy;
+        private Test_Cross_Strategy crossStrategy;
+        private Cross_Strategy_Position_Manager positionManager;
+        private Cross_Headge_Strategy headgeStrategy;
 
         public override string[] MonitoringConnectionsIds => new string[] { this.symbol?.ConnectionId };
 
@@ -76,13 +81,11 @@ namespace StrategyRun
             int m = this.Multiplaier2 * 53;
             TimeSpan span = PerioBase.Duration * m;
             minutesInHd = span.Minutes;
-
-            this.trades = new List<Trade>();
-            this.positions = new List<Position>();
         }
 
         protected override void OnRun()
         {
+            #region IchiBasics
             if (symbol == null || account == null || symbol.ConnectionId != account.ConnectionId)
             {
                 Log("Incorrect input parameters... Symbol or Account are not specified or they have diffent connectionID.", StrategyLoggingLevel.Error);
@@ -122,147 +125,17 @@ namespace StrategyRun
 
             Serie = new CloudSeries(this.historicalData, Fast, Mid, Slow);
             Serie.GenerateCloud(list);
+            #endregion
 
-            crosStrategy = new Condic_Gap_Cros_Strategy_V1(Serie, usealgo: true, midorsloTf: TF.TimeFrame.Slow);
-
-            customPlacer = new CustomOrderPlacer(this.symbol, this.account, this.ammount);
-        }
-
-        
-        private void Place(Cloud c)
-        {
-            List<PlaceOrderRequestParameters> y = customPlacer.SetTarget(c, 0.01, TypeOfPosition.Cover);
-
-            foreach (var item in y)
+            if(this.Serie != null)
             {
-                Core.Instance.PlaceOrder(item);
-                Task.Delay(TimeSpan.FromSeconds(3)).Wait();
+                this.sentStrategy = new Cros_Sentiment_Strategy(this.Serie, TF.TimeFrame.Slow);
+                this.crossStrategy = new Test_Cross_Strategy(this.sentStrategy);
+                this.headgeStrategy = new Cross_Headge_Strategy(this.ammount, this.Serie);
+                List<ITradeTicket> lista = new List<ITradeTicket>() { this.crossStrategy };
+                this.positionManager = new Cross_Strategy_Position_Manager(lista, this.headgeStrategy, this.Serie, this.account );
             }
         }
-
-        #region Old_Set_Target
-        // Works Only Whith Limit Order Placer
-        //private List<PlaceOrderRequestParameters> SetTargets(Cloud cloud)
-        //{
-        //    List<PlaceOrderRequestParameters> output = new List<PlaceOrderRequestParameters>();
-
-        //    if (cloud.Color == CloudColor.white)
-        //        return output;
-
-        //    List<double> levelsList = new List<double>();
-        //    List<double> tpList = new List<double>();
-        //    List<double> sList = new List<double>();
-
-        //    if (levelsList.Any())
-        //        levelsList.Clear();
-
-        //    double clMin = 0;
-
-        //    switch (cloud.Color)
-        //    {
-        //        case CloudColor.green:
-        //            clMin = cloud.MaximaFast.Any() ? cloud.MaximaFast.Last().Value : cloud.EndPrice;
-        //            break;
-        //        case CloudColor.red:
-        //            clMin = cloud.MinimaFast.Any() ? cloud.MinimaFast.Last().Value : cloud.EndPrice;
-        //            break;
-        //    }
-
-        //    double clEnd = cloud.EndPrice;
-
-        //    levelsList.Add(clMin);
-        //    levelsList.Add(clEnd);
-        //    List<Bases> orderedBaseList = new List<Bases>();
-
-        //    if (cloud.BasesList.Any() & cloud.BasesList.Count > numberOfCloses - 2)
-        //    {
-        //        orderedBaseList = cloud.Color == CloudColor.red ? cloud.BasesList.OrderBy(b => b.Value).ToList() : cloud.BasesList.OrderByDescending(b => b.Value).ToList();
-
-        //        for (int i = 0; i < numberOfCloses - 2; i++)
-        //            levelsList.Add(orderedBaseList[i].Value);
-        //    }
-        //    else
-        //    {
-        //        levelsList.Clear();
-
-        //        double top = clEnd - clMin + clEnd;
-        //        double delta = top - clMin;
-
-        //        double step = delta / numberOfCloses;
-
-        //        for (int i = 0; i < numberOfCloses; i++)
-        //        {
-        //            levelsList.Add(clMin + (step * i));
-        //        }
-        //    }
-
-        //    if (!levelsList.Any())
-        //    {
-        //        Core.Instance.Loggers.Log("Emply Level List", LoggingLevel.Error);
-        //        return output;
-        //    }
-
-        //    if (tpList.Any() || sList.Any())
-        //    {
-        //        tpList.Clear();
-        //        sList.Clear();
-        //    }
-
-        //    else
-        //    {
-        //        for (int i = 0; i < levelsList.Count; i++)
-        //        {
-        //            switch (cloud.Color)
-        //            {
-        //                case CloudColor.green:
-        //                    tpList.Add(levelsList[i] - (levelsList[i] * tp));
-        //                    sList.Add(levelsList[i] + (levelsList[i] * sl));
-        //                    break;
-
-        //                case CloudColor.red:
-        //                    tpList.Add(levelsList[i] + (levelsList[i] * tp));
-        //                    sList.Add(levelsList[i] - (levelsList[i] * sl));
-        //                    break;
-        //            }
-        //        }
-        //    }
-
-        //    if (levelsList != null)
-        //    {
-        //        List<SlTpHolder> sls = new List<SlTpHolder>();
-        //        List<SlTpHolder> tps = new List<SlTpHolder>();
-
-        //        for (int i = 0; i < tpList.Count; i++)
-        //        {
-        //            SlTpHolder _sl = SlTpHolder.CreateSL(price: sList[i], PriceMeasurement.Absolute, quantityPercentage: 100);
-        //            sls.Add(_sl);
-
-        //            SlTpHolder _tp = SlTpHolder.CreateTP(price: tpList[i], PriceMeasurement.Absolute, quantityPercentage: 100);
-        //            tps.Add(_tp);
-        //        }
-
-        //        string orderTypeId = Core.OrderTypes.FirstOrDefault(x => x.ConnectionId == this.symbol.ConnectionId && x.Behavior == OrderTypeBehavior.Limit).Id;
-
-        //        for (int i = 0; i < levelsList.Count; i++)
-        //        {
-        //            var request = new PlaceOrderRequestParameters
-        //            {
-        //                Symbol = symbol,
-        //                OrderTypeId = orderTypeId,
-        //                Account = account,
-        //                Side = cloud.Color == CloudColor.red ? Side.Buy : Side.Sell,
-        //                Quantity = ammount / levelsList.Count,
-        //                Price = levelsList[i],
-        //                StopLoss = sls[i],
-        //                TakeProfit = tps[i],
-        //            };
-
-        //            output.Add(request);
-        //        }
-        //    }
-        //    return output;
-        //}
-        #endregion
 
         #region Events
         protected override List<StrategyMetric> OnGetMetrics()
@@ -271,15 +144,10 @@ namespace StrategyRun
 
             if (historicalData != null)
                 result.Add("Serie", $"{historicalData.Count}");
-            result.Add("Positions_Count", $"{positions.Count}");
-            result.Add("Trades_Count", $"{trades.Count}");
-            result.Add("GapFilter", gapFilter);
-            result.Add("AccountName", this.account.Name);
-            if(crosStrategy != null)
+            if (headgeStrategy != null)
             {
-                result.Add("CurrentSent", crosStrategy.CurrentSent);
-                result.Add("Cloud TF ", crosStrategy.currentTF);
-                result.Add("Cloud  ID ", crosStrategy.TradableCloudID);
+                result.Add("Order_Main", headgeStrategy.Mains.Orders.Count);
+                result.Add("Posizioni_Main", headgeStrategy.Mains.Posizioni.Count);
             }
             return result;
         }
@@ -287,19 +155,14 @@ namespace StrategyRun
        
         private void HistoricalData_NewHistoryItem(object sender, HistoryEventArgs e)
         {
+            double close = this.historicalData[0][PriceType.Open];
+
             Serie.Update(Fast);
             Serie.Update(Mid);
             Serie.Update(Slow);
-
-            crosStrategy.GetFastTradableCloud();
-
-            if (crosStrategy.TradableCloudID != -1)
-            {
-                Cloud c = crosStrategy.currentTF == TF.TimeFrame.Mid ? Serie.Clouds.Find(x => x.Id == crosStrategy.TradableCloudID) : Serie.CloudsMid.Find(x => x.Id == crosStrategy.TradableCloudID);
-
-                Place(c);
-            }
+            headgeStrategy.Update(close);
         }
+
         protected override void OnStop()
         {
             this.Log($"clouds.count {Serie.Hd.Count}", StrategyLoggingLevel.Trading);

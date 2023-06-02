@@ -24,7 +24,7 @@ namespace StrategyRun.Strategie
         public string Status { get; private set; } = "null";
         public string CondictionName { get; set; } = "Gap-Cross V1";
         public  string Description { get; } = "Trading Strategy based on Mid-gap and fast cross";
-        public TF.TimeFrame currentTF { get; }
+        public TF.TimeFrame CurrentTF { get; }
 
         public event EventHandler<TradeTiket> TradeTicketCreated;
 
@@ -38,16 +38,17 @@ namespace StrategyRun.Strategie
         public Condic_Gap_Cros_Strategy_V2(CloudSeries serie , TF.TimeFrame midorsloTf= TF.TimeFrame.Mid,
             bool gapFilter = false, double thickfilter = 0.5)
         {
-            this.currentTF = midorsloTf;
+            this.CurrentTF = midorsloTf;
             this.gapFilter = gapFilter;
             this.thickFilter = thickfilter;
             this.ticket = new TradeTiket();
+            this.Series = serie;
 
             tradeCloud = new List<Cloud>();
             tradeGap = new List<Gaps>();
             this.gappedCloudID = new List<int>();
 
-            if(currentTF == TF.TimeFrame.Fast)
+            if(CurrentTF == TF.TimeFrame.Fast)
             {
                 Log("Current TF wrong value assignment", LoggingLevel.Trading);
                 return;
@@ -65,7 +66,7 @@ namespace StrategyRun.Strategie
 
         private void GetFastTradableCloud()
         {
-            if(currentTF != TF.TimeFrame.Mid && currentTF != TF.TimeFrame.Slow)
+            if(CurrentTF != TF.TimeFrame.Mid && CurrentTF != TF.TimeFrame.Slow)
             {
                 Log("Current TF wrong value assignment", LoggingLevel.Trading);
                 return;
@@ -76,11 +77,11 @@ namespace StrategyRun.Strategie
                 return;
 
             // Get Last Cloud
-            Cloud c = currentTF == TF.TimeFrame.Mid ? Series.CurrentCloud : Series.CurrentMidCloud;
+            Cloud c = CurrentTF == TF.TimeFrame.Mid ? Series.CurrentCloud : Series.CurrentMidCloud;
 
             int position = c.Buffer + c.Time_F.GetCorrectBuffer(Series.TenkanPeriod);
-            int midtfperio = currentTF == TF.TimeFrame.Mid ? Series.MidTF.GetCorrectBuffer(Series.TenkanPeriod) : Series.SlowTF.GetCorrectBuffer(Series.TenkanPeriod);
-            int debug = position - c.Time_F.GetCorrectBuffer(Series.TenkanPeriod);
+            int midtfperio = CurrentTF == TF.TimeFrame.Mid ? Series.MidTF.GetCorrectBuffer(Series.TenkanPeriod) : Series.SlowTF.GetCorrectBuffer(Series.TenkanPeriod);
+            //List<int> debug = new List<int>() { position , tradeGap.FindAll(i => i.Buffer + midtfperio > position).First().Buffer + midtfperio };
 
             Gaps? g = null;
 
@@ -92,9 +93,9 @@ namespace StrategyRun.Strategie
                 {
                     Gaps x = (Gaps)g;
                     int indexg = tradeGap.IndexOf(x);
-                    if(this.currentTF == TF.TimeFrame.Mid)
+                    if(this.CurrentTF == TF.TimeFrame.Mid)
                         gappedCloudColor = Series.Clouds[gappedCloudID[indexg]].Color;
-                    else if(this.currentTF == TF.TimeFrame.Slow)
+                    else if(this.CurrentTF == TF.TimeFrame.Slow)
                         gappedCloudColor = Series.CloudsMid[gappedCloudID[indexg]].Color;
                 }
 
@@ -132,7 +133,7 @@ namespace StrategyRun.Strategie
 
                     if (position + c.Length > v.Buffer + midtfperio)
                     {
-                        Cloud selected = currentTF == TF.TimeFrame.Mid ? Series.Clouds.Last(c => c.Buffer <= delayBuffer) : Series.CloudsMid.Last(c => c.Buffer <= delayBuffer);
+                        Cloud selected = CurrentTF == TF.TimeFrame.Mid ? Series.Clouds.Last(c => c.Buffer <= delayBuffer) : Series.CloudsMid.Last(c => c.Buffer <= delayBuffer);
 
                         if (selected.Color != gappedCloudColor)
                             currentGap = null;
@@ -154,7 +155,7 @@ namespace StrategyRun.Strategie
             }
                 
 
-            Cloud x = currentTF == TF.TimeFrame.Mid ? Series.CurrentCloud : Series.CurrentMidCloud;
+            Cloud x = CurrentTF == TF.TimeFrame.Mid ? Series.CurrentCloud : Series.CurrentMidCloud;
             CloudColor cloudSelectedColor = gappedCloudColor == CloudColor.red ? CloudColor.green : CloudColor.red;
             CloudColor tradeCloudColor = gappedCloudColor == CloudColor.red ? CloudColor.red : CloudColor.green;
 
@@ -227,7 +228,7 @@ namespace StrategyRun.Strategie
         #region Events Subscription
         private void Series_Cross(object sender, CrossEvent e)
         {
-            switch (currentTF)
+            switch (CurrentTF)
             {
                 case TF.TimeFrame.Fast:
                     Log("Wrong Tf selected", LoggingLevel.Trading);
@@ -264,7 +265,7 @@ namespace StrategyRun.Strategie
         {
             Cloud c = sender as Cloud;
 
-            switch (currentTF)
+            switch (CurrentTF)
             {
                 case TF.TimeFrame.Fast:
                     Log("Wrong Tf selected", LoggingLevel.Trading);
@@ -311,7 +312,7 @@ namespace StrategyRun.Strategie
         {
             TradeTiket t = new TradeTiket();
 
-            switch (currentTF)
+            switch (CurrentTF)
             {
                 case TF.TimeFrame.Fast:
                     Log("Wrong Tf selected", LoggingLevel.Trading);
@@ -352,7 +353,9 @@ namespace StrategyRun.Strategie
             }
             else
             {
-                this.Status = "Unable to build Dictionary";
+                List<Cloud> list = new List<Cloud>() {c};
+                output.Add(dico.Keys.Last(), list);
+                Log("Dictionary dont contain Cloud", LoggingLevel.Trading);
             }
            return output;
         }

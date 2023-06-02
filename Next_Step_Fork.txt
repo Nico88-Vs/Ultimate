@@ -22,3 +22,9 @@
 				                                                     sentiment 
       
 	  Eliminare Place Order?
+
+	  ___________27/05/23
+
+	  #metterre profit per una cover esistente
+	  #aprire ordini pe i livelli
+	  #usare cross se non ci sono livelli

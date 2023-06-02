@@ -11,6 +11,8 @@ using TradingPlatform.BusinessLayer;
 
 namespace StrategyRun.Order_Placer
 {
+    public enum TypeOfPosition { Main, Cover }
+
     public class CustomOrderPlacer
     {
         List<Trade> Trades { get; set; }

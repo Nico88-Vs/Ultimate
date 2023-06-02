@@ -114,6 +114,7 @@ namespace TheIndicator
             //DysplaySeries(Series.Clouds, TypeOfValue.minFast, this.LinesSeries[1]);
             //DysplaySeries(Series.Clouds, TypeOfValue.id, this.LinesSeries[0]);
             DysolayScenario(this.LinesSeries[0]);
+            SetValue(3, lineIndex: 1);
         }
 
         public override void OnPaintChart(PaintChartEventArgs args)

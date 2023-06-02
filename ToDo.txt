@@ -13,3 +13,14 @@ ______ !! Logica di gap in Update Series >>>>>> IN Cloud
 !! ho aggiunto i filtri sui gap! in shape 
 !! VERIFICARE IL FILTRO GAP	
 !! GAP_CrosStrategy si ferma se la verde ha buffer maggiore di gap
+
+
+
+Daily Worck
+
+!! (Try Dysplay Strategy)
+
+!! Shift Comment once cloud cross
+!! Move Stop Loss
+	Se c e posizione e il prezzo torna sopra al min di slow Sl move slow.min
+!! Remove useless clouds

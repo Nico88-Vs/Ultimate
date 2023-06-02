@@ -5,17 +5,19 @@ using TheIndicator.LibreriaDiClassi;
 using TradingPlatform.BusinessLayer;
 using TheIndicator.Enum;
 using StrategyRun.Class_Lybrary;
+using TradingPlatform.BusinessLayer.Integration;
+using System.Reflection.Metadata;
+using System.Threading.Tasks;
 
 namespace StrategyRun.Headg_Manager
 {
     public class HeadgeManager<T , X> where T : ITradeTicket where X : ISentiment 
     {
-        private  enum TypeOfPosition { Cover, Main }
         private enum ManagerStatus { WaitingMain, WaitingCovers, OpeningMain, OpeningCovers, Running}
 
         private Covers Cover { get; set; }
         private MainTrades MainTrade { get; set; }
-        private T TiketObj{ get; set; }
+        private List<T> TiketObjList{ get; set; }
         private X SentimentObj { get; set; }
         public bool UseAlgo { get; private set; }
         public double CurrentExposition_Perce { get; private set; }
@@ -26,30 +28,34 @@ namespace StrategyRun.Headg_Manager
         private ManagerStatus status;
         private Account account;
         private Symbol symbol;
-        private CloudSeries Series;
+        public CloudSeries Series;
         private Sentiment sentiment;
         private int tradersId = 0;
 
 
-        private const string mainComment = "Main";
-        private const string coverComment = "Cover";
+        private const string mainComment = IPosizioni.mainComment;
+        private const string coverComment = IPosizioni.coverComment;
 
-        public HeadgeManager(Account account, double totalAmmo, T cond, X sentObj, bool usealgo = true)
+        public HeadgeManager(Account account, double totalAmmo, List<T> cond, X sentObj, bool usealgo = true)
         {
             this.totalAmmount = totalAmmo;
-            this.TiketObj = cond;
-            this.Series = cond.Series;
+            this.TiketObjList = cond;
+            this.Series = cond[0].Series;
             this.account = account; 
-            this.symbol = cond.Series.FastTF.Indicatore.Symbol;
-            this.MainTrade = new MainTrades(tradersId);
-            this.Cover = new Covers(tradersId);
+            this.symbol = cond[0].Series.FastTF.Indicatore.Symbol;
+            this.MainTrade = new MainTrades(tradersId, Series);
+            this.Cover = new Covers(tradersId, Series);
             this.SentimentObj = sentObj;
-            this.sentiment = sentObj.CurrentSent.NewSentiment;
+            this.sentiment = Sentiment.Wait; //sentObj.CurrentSent.NewSentiment;
+            this.UseAlgo = usealgo;
 
             if(UseAlgo)
                 this.SentimentObj.CurrentSent.SentimentChanged += this.CurrentSent_SentimentChanged;
 
-            this.TiketObj.TradeTicketCreated += this.TiketObj_TradeTicketCreated;
+            foreach (var item in this.TiketObjList)
+            {
+                item.TradeTicketCreated += this.TiketObj_TradeTicketCreated;
+            }
             Core.Instance.OrderAdded += this.Instance_OrderAdded;
             Core.Instance.OrderRemoved += this.Instance_OrderRemoved;
             Core.Instance.PositionAdded += this.Instance_PositionAdded;
@@ -60,8 +66,24 @@ namespace StrategyRun.Headg_Manager
         /// </summary>
         public void Update()
         {
+            foreach (var item in this.TiketObjList)
+            {
+                item.Update();
+            }
+            SentimentObj.SetSentiment();
             CalculateExposition();
             SetStatus();
+
+            if (MainTrade.CurrenTick != null && this.Series.CurrentCloud.Color == CloudColor.green)
+            {
+                List<double>[] lvlLists = this.MainTrade.GetIn_Out_Prices(MainTrade.CurrenTick);
+                var req = GetRequestParameters(lvlLists);
+                Core.Instance.PlaceOrder(req);
+                Task.Delay(TimeSpan.FromSeconds(3)).Wait();
+
+                //While debugging 
+                this.MainTrade.CurrenTick = null;
+            }
         }
 
         #region Methods
@@ -85,9 +107,25 @@ namespace StrategyRun.Headg_Manager
         /// Controlla la compatibilita target e sentiment
         /// </summary>
         /// <param Sentiment="currentSentObj"></param>
-        private void CekCompatibility()
+        private bool CekCompatibility(List<double>[] lvlLists )
         {
+            if(lvlLists.Count() != 2)
+            {
+                this.Log("The Levels List are not compatible with this Headge Manager", LoggingLevel.Trading);
+                return false;
+            }
+            else
+            {
+                this.Log("Actualy just cek if targets are more than 1% different", LoggingLevel.Trading);
 
+                double inAvarage = lvlLists[0].Average();
+                double outAvarage = lvlLists[1].Average();
+
+                if(outAvarage > inAvarage*1.01 || outAvarage < inAvarage*0.99)
+                    return true;
+                else
+                    return false;
+            }
         }
 
         /// <summary>
@@ -102,7 +140,7 @@ namespace StrategyRun.Headg_Manager
         /// <summary>
         /// Switch Current Status
         /// </summary>
-        /// <param StructList="Posizioni"></param>
+        /// <param StructList="Trades"></param>
         private void SetStatus()
         {
             if(this.MainTrade.Posizioni.Count == 0 && this.Cover.Posizioni.Count == 0)
@@ -151,11 +189,23 @@ namespace StrategyRun.Headg_Manager
 
         private void TiketObj_TradeTicketCreated(object sender, TradeTiket e)
         {
-            if (e.TradeSentiment == Sentiment.Wait)
-                return;
+            ITradeTicket Mid = TiketObjList.Find(x => x.CurrentTF == TF.TimeFrame.Mid);
+            ITradeTicket Slow = TiketObjList.Find(x => x.CurrentTF == TF.TimeFrame.Slow);
 
-            if(this.status == ManagerStatus.WaitingMain)
+            if (e.TradeSentiment == Sentiment.Wait)
             {
+                if(e.TradeSentiment == SentimentObj.CurrentSent.NewSentiment && e.TFrame.Timeframe == TF.TimeFrame.Slow)
+                {
+                    this.status = ManagerStatus.WaitingMain;
+                }
+            }
+
+            if(this.status == ManagerStatus.WaitingMain && sender.Equals(Mid))
+            {
+                List<double>[] targets = MainTrade.GetIn_Out_Prices(e);
+                if(!CekCompatibility(targets))
+                    return;
+
                 if(e.TFrame.Timeframe != TF.TimeFrame.Slow && e.TradeSentiment == sentiment)
                 {
                     if(MainTrade.CurrenTick == null)
@@ -164,7 +214,12 @@ namespace StrategyRun.Headg_Manager
                     else if(MainTrade.CurrenTick != e)
                     {
                         MainTrade.TiketsList.Add(MainTrade.CurrenTick);
-                        MainTrade.CurrenTick = e;
+
+                        double oldEndPrice = IPosizioni.Get_tiketCloud(MainTrade.CurrenTick, Series).EndPrice;
+                        double newEndPrice = IPosizioni.Get_tiketCloud(e, Series).EndPrice;
+
+                        if(newEndPrice > oldEndPrice)
+                            MainTrade.CurrenTick = e;
                     }
                 }
             }
@@ -191,6 +246,7 @@ namespace StrategyRun.Headg_Manager
         #endregion
 
         #region Service
+        // List Operations
         private void AddTradingObj(object tradeObj)
         {
             if(tradeObj == null)
@@ -303,7 +359,44 @@ namespace StrategyRun.Headg_Manager
             {
                 Log("Incoerent Type", LoggingLevel.Trading);
             }   
-        }   
+        }
+        // Menge options
+        private PlaceOrderRequestParameters GetRequestParameters(List<double>[] targets)
+        {
+            PlaceOrderRequestParameters rq = new PlaceOrderRequestParameters();
+            List<SlTpHolder> tp = new List<SlTpHolder>();
+            double slPrice = this.sentiment== Sentiment.Buy ? targets[0].First()*0.995 : targets[0].First()*1.005;
+
+            SlTpHolder sl = SlTpHolder.CreateSL(slPrice, quantityPercentage : 100);
+
+            foreach(var target in targets[1])
+            {
+                SlTpHolder _Tp = SlTpHolder.CreateTP(target, quantityPercentage : 100 / (totalAmmount / (3 * targets[1].Count)));
+                tp.Add(_Tp);
+            }
+
+            string orderTypeId = Core.Instance.OrderTypes.FirstOrDefault(x => x.ConnectionId == symbol.ConnectionId && x.Behavior == OrderTypeBehavior.Limit).Id;
+
+            if(MainTrade.CurrenTick != null)
+            {
+                var request = new PlaceOrderRequestParameters
+                {
+                    Account = this.account,
+                    Symbol = this.symbol,
+                    OrderTypeId = orderTypeId,
+                    Side = this.sentiment == Sentiment.Buy ? Side.Buy : Side.Sell,
+                    Quantity = this.totalAmmount / 3,
+                    TakeProfit = tp[0],
+                    Price = targets[0].First(),
+                    StopLoss = sl,
+                    Comment = mainComment
+                };
+
+                rq = request;
+            }
+
+            return rq;
+        }
         public void ActiveAlgo()
         {
             if (UseAlgo)
@@ -339,22 +432,41 @@ namespace StrategyRun.Headg_Manager
             public IPosizioni.IPosi_Status Status { get; set; } = IPosizioni.IPosi_Status.Waiting;
             public List<TradeTiket> TiketsList { get; set; }
             public TradeTiket CurrenTick { get; set; }
+            public CloudSeries Serie { get; set; }
 
             public const string Name = "Basic_Main_Trader";
 
 
-            public MainTrades(int id)
+            public MainTrades(int id, CloudSeries serie)
             {
                 this.Id = id;
                 this.Posizioni = new List<Position>();
                 this.Orders = new List<Order>();
                 this.TiketsList = new List<TradeTiket>();
+                this.Serie = serie;
             }
+            //Set In and Out Targets
+            public List<double>[] GetIn_Out_Prices(TradeTiket tiket)
+            {
+                List<double>[] prices = new List<double>[2];
+                Cloud cloud = IPosizioni.Get_tiketCloud(tiket, this.Serie);
 
-            public List<double> GetPrice(Cloud cloud) => throw new NotImplementedException();
-            public RequestParameters GetRequestParameters(List<double> targets) => throw new NotImplementedException();
+                List<double> In = new List<double>();
+                double baseLast = cloud.BasesList.Last().Value;
+                double endPrice = cloud.EndPrice;
+                In.Add((baseLast + endPrice) / 2);
+
+                List<double> Out = IPosizioni.GetOutLevels_UpperTF(tiket, mainComment, Serie);
+
+                prices[0] = In;
+                prices[1] = Out;
+
+                return prices;
+            }
+           
             public bool Buy_Sel() => throw new NotImplementedException();
         }
+       
 
         internal class Covers
         {
@@ -364,16 +476,19 @@ namespace StrategyRun.Headg_Manager
             public IPosizioni.IPosi_Status Status { get; set; } = IPosizioni.IPosi_Status.Waiting;
             public List<TradeTiket> TiketsList { get; set; }
             public TradeTiket CurrenTick { get; set; }
+            public CloudSeries Serie { get; set; }
+
 
             public const string Name = "Basic_Cover_Trader";
 
 
-            public Covers(int id)
+            public Covers(int id, CloudSeries serie)
             {
                 this.Id = id;
                 this.Posizioni = new List<Position>();
                 this.Orders = new List<Order>();
                 this.TiketsList = new List<TradeTiket>();
+                this.Serie = serie;
             }
 
             public List<double> GetPrice(Cloud cloud) => throw new NotImplementedException();
