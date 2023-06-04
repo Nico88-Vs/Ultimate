@@ -8,17 +8,19 @@ using TheIndicator;
 using TheIndicator.LibreriaDiClassi;
 using StrategyRun.Strategie;
 using System.Threading.Tasks;
-using StrategyRun.Order_Placer;
 using StrategyRun.Headg_Manager;
 using StrategyRun.Sentiments_Strategies;
-using StrategyRun.HeadgeStrategy;
 using StrategyRun.Class_Lybrary;
 using StrategyRun.HeadgeStrategyi;
+using DB_SQLite.Models;
+using DB_SQLite.Data_Acces;
+using DB_SQLite.Event_Execute;
 
 namespace StrategyRun
 {
     public class StrategyRun : Strategy
     {
+        #region input
         [InputParameter("Symbol", 10)]
         private Symbol symbol;
 
@@ -52,6 +54,7 @@ namespace StrategyRun
 
         [InputParameter("Ammount", 4)]
         private double ammount = 33;
+        #endregion
 
         private Indicator Indi;
         private HistoricalData historicalData;
@@ -65,6 +68,12 @@ namespace StrategyRun
         private Test_Cross_Strategy crossStrategy;
         private Cross_Strategy_Position_Manager positionManager;
         private Cross_Headge_Strategy headgeStrategy;
+
+
+        //TEst
+        Test_model model = new Test_model(0, "jhon");
+        StoreExecuter ex = new StoreExecuter();
+
 
         public override string[] MonitoringConnectionsIds => new string[] { this.symbol?.ConnectionId };
 
@@ -81,10 +90,16 @@ namespace StrategyRun
             int m = this.Multiplaier2 * 53;
             TimeSpan span = PerioBase.Duration * m;
             minutesInHd = span.Minutes;
+
+           
         }
 
         protected override void OnRun()
         {
+            Store_Event e = new Store_Event(storeType.Test, model);
+            ex.OnStore(e);
+            //TestModel_DataAcces.Save(model);
+
             #region IchiBasics
             if (symbol == null || account == null || symbol.ConnectionId != account.ConnectionId)
             {
@@ -149,6 +164,7 @@ namespace StrategyRun
                 result.Add("Order_Main", headgeStrategy.Mains.Orders.Count);
                 result.Add("Posizioni_Main", headgeStrategy.Mains.Posizioni.Count);
             }
+
             return result;
         }
        
@@ -165,6 +181,7 @@ namespace StrategyRun
 
         protected override void OnStop()
         {
+           
             this.Log($"clouds.count {Serie.Hd.Count}", StrategyLoggingLevel.Trading);
             this.symbol.NewQuote -= this.Symbol_NewQuote;
             this.symbol.NewLast -= this.Symbol_NewLast;
@@ -176,8 +193,10 @@ namespace StrategyRun
         private void Symbol_NewQuote(Symbol symbol, Quote quote)
         {
         }
+
         protected override void OnRemove()
         {
+
             this.symbol = null;
             this.account = null;
         }

@@ -15,7 +15,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Elementi di soluzione", "El
 		ToDo.txt = ToDo.txt
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DB_comunication", "DB_comunication\DB_comunication.csproj", "{7F1AA98D-61BC-4A03-BA1E-B3D988153EC7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DB_SQLite", "DB_SQLite\DB_SQLite.csproj", "{875412D2-441F-4053-AF4A-2D139D3C7BC9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,10 +35,10 @@ Global
 		{34E8B101-0872-4264-84AD-05735B5AEF22}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{34E8B101-0872-4264-84AD-05735B5AEF22}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{34E8B101-0872-4264-84AD-05735B5AEF22}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7F1AA98D-61BC-4A03-BA1E-B3D988153EC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7F1AA98D-61BC-4A03-BA1E-B3D988153EC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7F1AA98D-61BC-4A03-BA1E-B3D988153EC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7F1AA98D-61BC-4A03-BA1E-B3D988153EC7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{875412D2-441F-4053-AF4A-2D139D3C7BC9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{875412D2-441F-4053-AF4A-2D139D3C7BC9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{875412D2-441F-4053-AF4A-2D139D3C7BC9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{875412D2-441F-4053-AF4A-2D139D3C7BC9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

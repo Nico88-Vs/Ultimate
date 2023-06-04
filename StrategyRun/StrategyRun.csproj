@@ -10,7 +10,7 @@
     <RootNamespace>StrategyRun</RootNamespace>
     <StartAction>Program</StartAction>
     <StartProgram>A:\Quantower\TradingPlatform\v1.130.11\Console.StarterNew.exe</StartProgram>
-    <StartArguments>--address 127.0.0.1 --port 53124</StartArguments>
+    <StartArguments>--address 127.0.0.1 --port 50251</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <OutputPath>A:\Quantower\TradingPlatform\v1.130.11\..\..\Settings\Scripts\Strategies\StrategyRun</OutputPath>
@@ -21,7 +21,7 @@
     <Optimize>False</Optimize>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\PlaceOrder\PlaceOrder.csproj" />
+    <ProjectReference Include="..\DB_SQLite\DB_SQLite.csproj" />
     <ProjectReference Include="..\TheIndicator\TheIndicator.csproj" />
   </ItemGroup>
   <ItemGroup>
@@ -42,5 +42,8 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{3259aa49-8aa1-44d3-9025-a0b520596a8c}" />
   </ItemGroup>
 </Project>

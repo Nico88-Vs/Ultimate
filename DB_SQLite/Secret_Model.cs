@@ -4,9 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Lybrary.Struct
+namespace DB_SQLite
 {
-    public struct Cloud_Color
-    {
-    }
+    public record Secret_Model(string SQlite_Db_Absolute_Path, string SQlite_Db_Relative_Path);
 }
